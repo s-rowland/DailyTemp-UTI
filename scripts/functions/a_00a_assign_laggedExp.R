@@ -28,7 +28,7 @@ assign_laggedExp <- function(dta_outcome, dta_exp, numLag){
   
   # 1c Create column of lag 
   dta_outcome <- dta_outcome %>% 
-    mutate(activeLag := ADMDateTime + as.period(1 * numLag, 'day'))
+    mutate(activeLag := ADMDateTime - as.period(1 * numLag, 'day'))
   
   # 1d Join with exposure data 
   dta_outcome <- dta_exp %>% 
