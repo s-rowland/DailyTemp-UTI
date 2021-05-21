@@ -21,7 +21,7 @@
 
 # 1a Name function 
 assign_laggedExp <- function(dta_outcome, dta_exp, numLag){
-  # dta_outcome <- dta_assignedTemp; dta_exp <- temp; numLag <- 3
+  # dta_outcome <- dta_assignedTemp; dta_exp <- temper; numLag <- 3
   
   # 1b Create variable name 
   VarName <- paste0('tLag', str_pad(numLag, 2, 'left', '0'))

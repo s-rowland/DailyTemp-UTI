@@ -12,8 +12,8 @@
 # 0: Preparation 
 # 1: Begin Function
 # 2: Create Variables
-# 3: Ascertain Cases
-# 4: Stratify Data 
+# 3: Ascertain Cases and Stratify by Patient Characteristics
+# 4: Stratify Data by Temporal and Spatial Factors
 # 5: Create Crossbasis
 # 6: Fit Health Model 
 # 7: Save Results
@@ -51,7 +51,12 @@ analyze_dlnmTemp <- function(Sensitivity, SubSetVar, SubSet,
   # Sensitivity <- 'Main'; 
   # ERConstraint <- '3dfevenknots'; LRConstraint <- '2dfevenknots';
   # SubSetVar <- 'FullSet'; SubSet <- 'FullSet';  SaveModel <- 'SaveAIC'
-
+# set this instead to test subsetting by a patient characteristic
+  # SubSetVar <- 'sex'; SubSet <- 'f';  SaveModel <- 'SaveAIC'
+  
+  # set this instead to test subsetting by a time-varying characteristic
+  # SubSetVar <- 'season'; SubSet <- 'summer';  SaveModel <- 'SaveAIC'
+  
   # 1b Create ModelName 
   ModelName <- paste(Sensitivity, SubSetVar, SubSet, 
                      ERConstraint, LRConstraint, sep = '_')
@@ -67,13 +72,24 @@ analyze_dlnmTemp <- function(Sensitivity, SubSetVar, SubSet,
   dta <- dta %>% 
     mutate(ADMDateTime = parse_date_time(ADMDT, 'ymd', tz = 'America/Los_Angeles'))
   
+  # Here I am making random variables for testing
   minDateTime = min(dta$ADMDateTime)
   dta <- dta %>% 
     mutate(DayIndex = as.numeric(ADMDateTime - minDateTime, 'days'))
   
-  ####************************
-  #### 3: Ascertain Cases ####
-  ####************************
+  # Variables for testing subsetting
+  dta <- dta %>% 
+    mutate(case_count_sex_f = case_count - 1) %>% 
+    mutate(MM = month(ADMDateTime)) %>% 
+    mutat(season = case_when(
+      MM %in% c(12, 1, 2) ~'winter', 
+      MM %in% c(3, 4, 5) ~'spring', 
+      MM %in% c(6, 7, 8) ~'summer', 
+      MM %in% c(9, 10, 11) ~'fall'))
+  
+  ####****************************************************************
+  #### 3: Ascertain Cases and Stratify by Patient Characteristics ####
+  ####****************************************************************
   
   # if you considered alternative UTI criteria, you can change which count column
   # you analyze. 
@@ -90,20 +106,29 @@ analyze_dlnmTemp <- function(Sensitivity, SubSetVar, SubSet,
   # so that the sensitivity term only distinguishes the main results 
   # from sensitivity results. 
   
-  if(Sensitivity == 'Main'){
+  if(Sensitivity == 'Main' & SubSet == 'FullSet'){
     dta <- dta %>% mutate(outcome_count = case_count)
     }
 
-  ####**********************
-  #### 4: Stratify Data ####
-  ####**********************
+  if(Sensitivity == 'Main' & SubSet != 'FullSet'){
+    countVar = paste0('case_count_', SubSetVar, '_', SubSet)
+    dta$outcome_count <- dta[, countVar]
+  }
+  
+  ####******************************************************
+  #### 4: Stratify Data by Temporal and Spatial Factors ####
+  ####******************************************************
 
-  # 4a Apply any stratification 
+  # 4a Apply any stratification by time-varying or spatially-varying factors
   # in this section, we first rename the column for that subsetting variable 
   # to SUBSETVAR 
   # we then apply a filter to only keep observations that match the particular 
   # subset we are interested in. 
-  if(SubSet != 'FullSet'){
+  
+  # Right now it is set up to only subset for the season variable 
+  # if we create such a variable 
+  # if we want to add other variable, we can just add them to the if statement
+  if(SubSetVar == 'Season'){
     dta <- dta %>% 
       rename(SUBSETVAR = !!SubSetVar) %>%
       filter(SUBSETVAR == SubSet)

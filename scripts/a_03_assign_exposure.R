@@ -96,7 +96,7 @@ temper <- temper %>%
 # if this step takes a long time we can find a way to parallelize it
 # where each iteration is a new lag 
 maxLag <- 7
-for(l in 1:maxLag){
+for(l in 0:(maxLag-1)){
   dta_assignedTemp <- assign_laggedExp(dta_assignedTemp, temper, l)
 }
 
