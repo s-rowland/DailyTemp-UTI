@@ -52,10 +52,10 @@ analyze_dlnmTemp <- function(Sensitivity, SubSetVar, SubSet,
   # ERConstraint <- '3dfevenknots'; LRConstraint <- '2dfevenknots';
   # SubSetVar <- 'FullSet'; SubSet <- 'FullSet';  SaveModel <- 'SaveAIC'
 # set this instead to test subsetting by a patient characteristic
-  # SubSetVar <- 'sex'; SubSet <- 'f';  SaveModel <- 'SaveAIC'
+  # SubSetVar <- 'Sex'; SubSet <- 'F';  SaveModel <- 'SaveAIC'
   
   # set this instead to test subsetting by a time-varying characteristic
-  # SubSetVar <- 'season'; SubSet <- 'summer';  SaveModel <- 'SaveAIC'
+  # SubSetVar <- 'Season'; SubSet <- 'Summer';  SaveModel <- 'SaveAIC'
   
   # 1b Create ModelName 
   ModelName <- paste(Sensitivity, SubSetVar, SubSet, 
@@ -79,13 +79,13 @@ analyze_dlnmTemp <- function(Sensitivity, SubSetVar, SubSet,
   
   # Variables for testing subsetting
   dta <- dta %>% 
-    mutate(case_count_sex_f = case_count - 1) %>% 
+    mutate(case_count_Sex_F = case_count - 1) %>% 
     mutate(MM = month(ADMDateTime)) %>% 
-    mutat(season = case_when(
-      MM %in% c(12, 1, 2) ~'winter', 
-      MM %in% c(3, 4, 5) ~'spring', 
-      MM %in% c(6, 7, 8) ~'summer', 
-      MM %in% c(9, 10, 11) ~'fall'))
+    mutat(Season = case_when(
+      MM %in% c(12, 1, 2) ~'Winter', 
+      MM %in% c(3, 4, 5) ~'Spring', 
+      MM %in% c(6, 7, 8) ~'Summer', 
+      MM %in% c(9, 10, 11) ~'Fall'))
   
   ####****************************************************************
   #### 3: Ascertain Cases and Stratify by Patient Characteristics ####
@@ -109,8 +109,9 @@ analyze_dlnmTemp <- function(Sensitivity, SubSetVar, SubSet,
   if(Sensitivity == 'Main' & SubSet == 'FullSet'){
     dta <- dta %>% mutate(outcome_count = case_count)
     }
-
-  if(Sensitivity == 'Main' & SubSet != 'FullSet'){
+# we would also need to add any other temporal or spatial subsets to the 
+  # if statement
+  if(Sensitivity == 'Main' & !SubSetVar %in% c('FullSet', 'Season')){
     countVar = paste0('case_count_', SubSetVar, '_', SubSet)
     dta$outcome_count <- dta[, countVar]
   }
