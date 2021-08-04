@@ -20,27 +20,26 @@
 ####**************************************************
 
 # 1a Name function 
-assign_laggedExp <- function(dta_outcome, dta_exp, activeLag){
-  # dta_outcome <- dta_assignedTemp; dta_exp <- temper; activeLag <- 3
+assign_leadExp <- function(dta_outcome, dta_exp, activeLead){
+  # dta_outcome <- dta_assignedTemp; dta_exp <- temper; numLag <- 3
   
   # 1b Create variable name 
-  VarName <- paste0('tLag', str_pad(activeLag, 2, 'left', '0'))
-  VarNameR <- paste0('rLag', str_pad(activeLag, 2, 'left', '0'))
-  
+  VarName <- paste0('tLead', str_pad(activeLead, 2, 'left', '0'))
+
   # 1c Create column of lag 
   dta_outcome <- dta_outcome %>% 
-    mutate(lagDate := ADMDateTime - as.period(1 * activeLag, 'day'))
+    mutate(leadDate := ADMDateTime + as.period(1 * activeLead, 'day'))
   
   # 1d Join with exposure data 
   dta_outcome <- dta_exp %>% 
-    dplyr::select(fips, lagDate, tmean, avgrelhum) %>%
-    inner_join(dta_outcome, by = c('fips', 'lagDate'))
+    dplyr::select(fips, leadDate, tmean, avgrelhum) %>%
+    inner_join(dta_outcome, by = c('fips', 'leadDate'))
   
   # 1e Rename lagged exposure column
   # this is done in two steps because it is tricky to do dynamic variable naming 
   # with the rename() function. mutate + select does the same thing.
   dta_outcome <- dta_outcome %>% 
-    mutate(!!VarName := tmean, !!VarNameR := avgrelhum) %>% 
-    dplyr::select(-tmean, -lagDate, -avgrelhum)
+    mutate(!!VarName := tmean) %>% 
+    dplyr::select(-tmean, -leadDate, -avgrelhum)
 }
   

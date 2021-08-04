@@ -47,8 +47,12 @@ dta <- read_fst(here::here('data', 'preparedData',
                            paste0('cases_assignedTemp', outcomeName, '.fst')))
 
 # 1b Bring in the daily temperature dataset 
-temper <- read_fst(here::here('data', 'intermediateData',
-                              "temperature_fips_fake.fst")) 
+if(outcomeName == 'UTI'){
+  temper <- read_fst(here::here('data', 'intermediateData', 'daily_weather.fst')) 
+}
+if(outcomeName == 'fake'){
+  temper <- read_fst(here::here('data', 'intermediateData', 'fake_weather.fst')) 
+}
 
 ####***********************
 #### 2: Fit Main Model ####
@@ -67,7 +71,7 @@ temper <- read_fst(here::here('data', 'intermediateData',
 
 candidateConstraintsGrid <- expand_grid(
   ERConstraint = c('lin', '3dfevenknots','4dfevenknots', '5dfevenknots'),
-  LRConstraint = c('3dfevenknots', '4dfevenknots', '5dfevenknots'))
+  LRConstraint = c( '3dflogknots', '4dflogknots'))
 
 # 2b Perform grid search to identify optional constraints
 # when we run these models, we do not save the results; only their AIC/QAIC

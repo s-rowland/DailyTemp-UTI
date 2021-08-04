@@ -46,23 +46,20 @@
 ####***********************
 
 # 1a Name function
-analyze_dlnmTemp <- function(Sensitivity, SubSetVar, SubSet,
-                             ERConstraint, LRConstraint, SaveModel){
-   
-  #Sensitivity <- 'Main'; 
-   #ERConstraint <- '3dfevenknots'; LRConstraint <- '3dflogknots';
+analyze_oneLagTemp <- function(Sensitivity, SubSetVar, SubSet,
+                             ERConstraint, ActiveLag){
+   #Sensitivity <- 'Main'; 
+   #ERConstraint <- '3dfevenknots'; ActiveLag <- 'Lag00';
    #SubSetVar <- 'FullSet'; SubSet <- 'FullSet';  SaveModel <- 'SaveAIC'
-  
-  
 # set this instead to test subsetting by a patient characteristic
-  # SubSetVar <- 'sex'; SubSet <- 'f';  SaveModel <- 'SaveAIC'
+  # SubSetVar <- 'Sex'; SubSet <- 'F';  SaveModel <- 'SaveAIC'
   
   # set this instead to test subsetting by a time-varying characteristic
   # SubSetVar <- 'Season'; SubSet <- 'Summer';  SaveModel <- 'SaveAIC'
   
   # 1b Create ModelName 
   ModelName <- paste(Sensitivity, SubSetVar, SubSet, 
-                     ERConstraint, LRConstraint, sep = '_')
+                     ERConstraint, ActiveLag, sep = '_')
   
   ####**************************
   #### 2: Create Variables ####
@@ -82,12 +79,13 @@ analyze_dlnmTemp <- function(Sensitivity, SubSetVar, SubSet,
   
   # Variables for testing subsetting
   dta <- dta %>% 
+    mutate(case_count_Sex_F = case_count - 1) %>% 
     mutate(MM = month(ADMDateTime)) %>% 
-    mutate(season = case_when(
-      MM %in% c(12, 1, 2) ~'win', 
-      MM %in% c(3, 4, 5) ~'spr', 
-      MM %in% c(6, 7, 8) ~'sum', 
-      MM %in% c(9, 10, 11) ~'fal'))
+    mutate(Season = case_when(
+      MM %in% c(12, 1, 2) ~'Winter', 
+      MM %in% c(3, 4, 5) ~'Spring', 
+      MM %in% c(6, 7, 8) ~'Summer', 
+      MM %in% c(9, 10, 11) ~'Fall'))
   
   ####****************************************************************
   #### 3: Ascertain Cases and Stratify by Patient Characteristics ####
@@ -108,11 +106,12 @@ analyze_dlnmTemp <- function(Sensitivity, SubSetVar, SubSet,
   # so that the sensitivity term only distinguishes the main results 
   # from sensitivity results. 
   
-  # we would also need to add any other temporal or spatial subsets to the 
-  # if statement
-  if(SubSetVar %in% c('FullSet', 'season', 'climateRegion')){
+  if(SubSet == 'FullSet'){
     dta <- dta %>% mutate(outcome_count = case_count)
-    } else {
+    }
+# we would also need to add any other temporal or spatial subsets to the 
+  # if statement
+  if(Sensitivity == 'Main' & !SubSetVar %in% c('FullSet', 'Season')){
     countVar = paste0('case_count_', SubSetVar, '_', SubSet)
     dta$outcome_count <- dta[, countVar]
   }
@@ -130,7 +129,7 @@ analyze_dlnmTemp <- function(Sensitivity, SubSetVar, SubSet,
   # Right now it is set up to only subset for the season variable 
   # if we create such a variable 
   # if we want to add other variable, we can just add them to the if statement
-  if(SubSetVar == 'season' | SubSetVar == 'climateRegion'){
+  if(SubSetVar == 'Season'){
     dta <- dta %>% 
       rename(SUBSETVAR = !!SubSetVar) %>%
       filter(SUBSETVAR == SubSet)
@@ -147,61 +146,14 @@ analyze_dlnmTemp <- function(Sensitivity, SubSetVar, SubSet,
     mutate(matchID = as.factor(matchID)) %>% 
     arrange(matchID)
   
-  # 5b Set the number of lags based on the sensitivity 
-  if(!str_detect(Sensitivity, 'DayLag')){numLag <- 14
-  }else {
-    numLag <- as.numeric(str_remove_all(Sensitivity, '[A-z]'))
-    }
+  # rename lag variable 
+  dta <- dta %>% 
+    rename(ActiveLagT := !!paste0('t', ActiveLag), 
+           ActiveLagR := !!paste0('r', ActiveLag))
   
-  # 5c Set ER and LR constraints
-  # we remove all of the letters from the  parameter, leaving just the number of df
-  ERdf <- as.numeric(str_remove_all(ERConstraint, '[A-z]'))
-  LRdf <- as.numeric(str_remove_all(LRConstraint, '[A-z]'))
-  
-  # 5d Isolate the exposure during the lags of interest
-  exposure_profiles <- as.matrix(dplyr::select(dta, contains('tLag')))[,1:numLag]
-  
-  # 5e Create crossbasis
-  # Here I include more options than I use in the main model 
-  if(str_detect(ERConstraint, 'lin') & str_detect(LRConstraint, 'evenknots')){
-    cb.temp <- crossbasis(
-      exposure_profiles, 
-      lag=c(0,(numLag-1)), # we subtract 1 because lags start at 0
-      argvar=list(fun='lin'),
-      arglag=list(fun='ns', df = LRdf))}
-  if(str_detect(ERConstraint, 'evenknots') & str_detect(LRConstraint, 'evenknots')){
-    cb.temp <- crossbasis(
-      exposure_profiles,
-      lag=c(0,(numLag-1)),
-      argvar=list(fun='ns', df = ERdf),
-      arglag=list(fun='ns', df = LRdf))}
-  if(str_detect(ERConstraint, 'evenknots') & str_detect(LRConstraint, 'logknots')){
-    lagKnots <- logknots(numLag-1, fun = 'ns', df = LRdf)
-    cb.temp <- crossbasis(
-      exposure_profiles,
-      lag=c(0,(numLag-1)),
-      argvar=list(fun='ns', df = ERdf),
-      arglag=list(knots=lagKnots))}
-  if(str_detect(ERConstraint, 'lin') & str_detect(LRConstraint, 'logknots')){
-    lagKnots <- logknots(numLag-1, fun = 'ns', df = LRdf)
-    cb.temp <- crossbasis(
-      exposure_profiles,
-      lag=c(0,(numLag-1)),
-      argvar=list(fun='lin'),
-      arglag=list(knots=lagKnots))}
-  if(!str_detect(ERConstraint, 'psp') & str_detect(LRConstraint, 'psp')){
-    cb.temp <- crossbasis(
-      exposure_profiles,
-      lag=c(0,(numLag-1)),
-      argvar=list(fun='ns', df = ERdf),
-      arglag=list(fun='ps'))}
-  if(str_detect(ERConstraint, 'psp') & !str_detect(LRConstraint, 'psp')){
-    cb.temp <- crossbasis(
-      exposure_profiles,
-      lag=c(0,(numLag-1)),
-      argvar=list(fun='ps'),
-      arglag=list(fun='ns', df = LRdf))}
-  
+  # create onebasis 
+  ob.temp <- onebasis(dta$ActiveLagT, fun = 'ns', df = 3)
+                      
   ####*************************
   #### 6: Fit Health Model ####
   ####*************************
@@ -209,31 +161,11 @@ analyze_dlnmTemp <- function(Sensitivity, SubSetVar, SubSet,
   # 6a Fit Main Model
   # note that we can change the distribution family to poisson if the dispersion 
   # factor is 1.
-  mod <- gnm(outcome_count ~ cb.temp + meanRH, 
+  mod <- gnm(outcome_count ~ ob.temp, #+ ActiveLagR, 
              family = quasipoisson(link= 'log'), 
              data = dta, 
              eliminate = matchID) # eliminate is the matching variable
-
-  # 6b Fit alternative models
-  # this is just an example to show what it would look like. 
-  if(Sensitivity == 'noRH'){
-    mod <- gnm(outcome_count ~ cb.temp, 
-               family = quasipoisson(link= 'log'), 
-               data = dta, 
-               eliminate = matchID) 
-  }
-  if(Sensitivity == 'RHdlnm'){
-    cb.rh <- crossbasis(
-      as.matrix(dplyr::select(dta, contains('rLag')))[,1:numLag], 
-      lag=c(0,(numLag-1)),
-      argvar=list(fun='ns', df = 3),
-      arglag=list(fun='ns', df = 3))
-    mod <- gnm(outcome_count ~ cb.temp + cb.rh, 
-               family = quasipoisson(link= 'log'), 
-               data = dta, 
-               eliminate = matchID) 
-  }
-
+  
   ####*********************
   #### 7: Save Results ####
   ####*********************
@@ -242,47 +174,7 @@ analyze_dlnmTemp <- function(Sensitivity, SubSetVar, SubSet,
   #### 7A: Save Model AIC ####
   ####************************
   
-  # 7A.a Begin option
-  # when we do the grid search, we want to just save the model's AIC and not its results
-  if(SaveModel == 'SaveAIC'){
-    
-    # 7A.b Readin the table of AIC's
-    aic.table <- read_csv(here::here(outPath, 'tables', 
-                                      'Model_AIC.csv'), col_types = 'cccccdcT')
-    
-    # 7A.c Calculate QAIC
-    # 7A.c.i Make a version of the quasipoisson distribution that includes the AIC 
-    # that you would get if the distribution were poission
-    x.quasipoisson <- function(...) {
-      res <- quasipoisson(...)
-      # This line is telling R to compute AIC for quasipoission
-      # as it would for a model with poisson distribution
-      res$aic <- poisson(...)$aic
-      res
-    }
-    # 7A.c.ii Update the model with the new distribution
-    mod1 <- update(mod,family = 'x.quasipoisson')
-    # 7A.c.i Extract the overdispersion factor
-    qaic.mod <- QAIC(mod1, chat = summary(mod1)$dispersion)
-    # reminder: equation for dispersion factor
-    #with(object,sum((weights * residuals^2)[weights > 0])/df.residual)
-    
-    # 7A.d Add this aic to the set of AIC's
-    aic.table[1+nrow(aic.table),] <- list(Sensitivity, SubSetVar, SubSet,
-                                          ERConstraint, LRConstraint, qaic.mod,
-                                          NA, Sys.time())
-    
-    # 7A.e Remove any old AICs and then save
-    # at the slice step you keep only the earliest AIC for each model-constraint combo
-    aic.table %>% 
-      group_by(Sensitivity, SubSetVar, SubSet,ERConstraint, LRConstraint) %>% 
-      arrange(desc(RunDate)) %>% 
-      slice(0:1) %>% 
-      filter(!is.na(Sensitivity)) %>%
-      write_csv(here::here(outPath, 'tables',
-                           'Model_AIC.csv'))
-  }
-  
+
   ####****************************
   #### 7B: Save Model Results ####
   ####****************************
@@ -293,8 +185,7 @@ analyze_dlnmTemp <- function(Sensitivity, SubSetVar, SubSet,
   # final model estimation
   
   # 7B.a Begin option  
-  if(SaveModel == 'SaveModel'){
-    
+
     # 7B.b Save the model 
     mod %>% saveRDS(here::here(outPath, 'models',
                                paste0(ModelName, '.RDS')))
@@ -327,7 +218,7 @@ analyze_dlnmTemp <- function(Sensitivity, SubSetVar, SubSet,
     # like the temperature at which there is minimal risk
     # or the temperature where the curve changes shape
     
-    est <- crosspred(basis = cb.temp,
+    est <- crosspred(basis = ob.temp,
                       model = mod,
                       cen = mean(temper$tmean),
                       at = expContrasts$CounterfactualTemp, 
@@ -336,15 +227,15 @@ analyze_dlnmTemp <- function(Sensitivity, SubSetVar, SubSet,
   
     # 7B.e Extract coefficient fit and CI 
     fit.table <- as.data.frame(est$matRRfit)  
-    colnames(fit.table) <- paste0('fit.rr.', colnames(fit.table))
+    colnames(fit.table) <- paste0('fit.rr.lag', as.numeric(str_remove_all(ActiveLag, '[A-z]')))
     fit.table <- fit.table %>%  
       mutate(CounterfactualTemp = as.numeric(row.names(fit.table)))
 
     lci.table <- as.data.frame(est$matRRlow)  
-    colnames(lci.table) <- paste0('lci.rr.', colnames(lci.table))
+    colnames(lci.table) <- paste0('lci.rr.lag', as.numeric(str_remove_all(ActiveLag, '[A-z]')))
     
     uci.table <- as.data.frame(est$matRRhigh)  
-    colnames(uci.table) <- paste0('uci.rr.', colnames(uci.table))
+    colnames(uci.table) <- paste0('uci.rr.lag', as.numeric(str_remove_all(ActiveLag, '[A-z]')))
     
     # 7B.f Combine fit and se for individual lags 
     # note that all RR are relative to the exposure reference value we set above 
@@ -357,33 +248,4 @@ analyze_dlnmTemp <- function(Sensitivity, SubSetVar, SubSet,
     est.table %>%
       write.csv(here::here(outPath, 'estimates', 
                                        paste0('EstInd_', ModelName, '.csv')))
-    
-    # 7B.i Extract cumulative coefficient fit and ci 
-    # the cumulative coefficients represent the relative risk for a day 
-    # if the previous set of days were at the 'exposed' temperature value 
-    # rather than the reference temperature
-    fit.table <- as.data.frame(est$cumRRfit)  
-    colnames(fit.table) <- paste0('fit.rr.', colnames(fit.table))
-    fit.table <- fit.table %>%  
-      mutate(CounterfactualTemp = as.numeric(row.names(fit.table)))
-    
-    lci.table <- as.data.frame(est$cumRRlow)  
-    colnames(lci.table) <- paste0('lci.rr.', colnames(lci.table))
-    
-    uci.table <- as.data.frame(est$cumRRhigh)  
-    colnames(uci.table) <- paste0('uci.rr.', colnames(uci.table))
-    
-    # 7B.j Combine fit and se for individual lags 
-    # note that all RR are relative to the exposure reference value we set above 
-    est.table <- bind_cols(fit.table, lci.table, uci.table)
-    
-    # 7B.k Attach the labels of the exposure contrasts
-    est.table <- est.table %>% full_join(expContrasts, by = 'CounterfactualTemp')
-    
-    # 7B.l Save cumulative estimates table 
-    est.table %>% 
-      write.csv(here::here(outPath, 'estimates',
-                           paste0('EstCumul_', ModelName, '.csv')))
-  } 
-  
 }

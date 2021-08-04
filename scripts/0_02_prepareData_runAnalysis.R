@@ -18,7 +18,7 @@
 #### N: Notes ####
 ####**************
 
-# This is a master script, to run everything. 
+# This is a top-level script, to run everything. 
 
 ####********************
 #### 0: Preparation #### 
@@ -39,12 +39,19 @@ if (!exists('ran_0_01')){
 ####*********************
 
 # 1a Run scripts to prepare data 
-# you might choose to split up the data preparation into multiple scripts
-#source(here::here('scripts', 'a_01_prepare_tempData.R'))
-source(here::here('scripts', 'a_01b_generate_fakeTemp_forCodePrepR.R'))
-#source(here::here('scripts', 'a_02a_identifyCases.R'))
-source(here::here('scripts', 'a_02b_generate_fakeCases_forCodeReview.R'))
-source(here::here('scripts', 'a_03_assign_exposure.R'))
+# We run generate fake data if we are doing a code review
+# the fake data means that any reviewer would get the same effect estimates 
+# and the reviewer can run the code on a computer outside of the Sutter system 
+if(outcomeName == 'UTI'){
+  source(here::here('scripts', 'a_01a_prepare_tempData.R'))
+  source(here::here('scripts', 'a_02a_identifyCases.R'))
+}
+if(outcomeName == 'fake'){
+  source(here::here('scripts', 'a_01b_generate_fakeTemp_forCodePrep.R'))
+  source(here::here('scripts', 'a_02b_generate_fakeCases_forCodePrep.R'))
+}
+# we assign exposure the same way regardless of real or fake data 
+source(here::here('scripts', 'a_03_assignExposure_matchDays.R'))
 
 ####*********************
 #### 2: Run Analysis #### 
@@ -52,10 +59,15 @@ source(here::here('scripts', 'a_03_assign_exposure.R'))
 
 # 2a Conduct main analyses 
 source(here::here('scripts', 'c_01_fit_mainModel.R'))
+source(here::here('scripts', 'c_02_fit_EMMmodels.R'))
 
-# 2b Conduct sensitivity analyses 
+# 2b Conduct sensitivity analyses
+source(here::here('scripts', 'd_01_fit_sensitivityAnalyses.R'))
 
 # 2c Conduct exploratory analyses
+source(here::here('scripts', 'e_02_fit_singleLagModels.R'))
+source(here::here('scripts', 'e_03_fit_unconstrainedDLNM.R'))
+source(here::here('scripts', 'e_04_fit_sensitivityAnalyses_setConstraints.R'))
 
 ####************************
 #### 3: Present Results #### 
@@ -64,9 +76,11 @@ source(here::here('scripts', 'c_01_fit_mainModel.R'))
 # 3a Run scripts to present results 
 source(here::here('scripts', 'g_01_set_plottingObjects.R'))
 #source(here::here('scripts', 'g_02_Table1_TableOne.R'))
-source(here::here('scripts', 'g_03_plot_exposureResponse_allLags_stationary.R'))
-source(here::here('scripts', 'g_04_plot_lagResponseCurve.R'))
+source(here::here('scripts', 'g_03_plot_ERCurve_perLag.R'))
+source(here::here('scripts', 'g_04_plot_LRCurve_perExposure.R'))
 source(here::here('scripts', 'g_05_tabulate_effectEstimates.R'))
+source(here::here('scripts', 'g_06_plot_ERCurve_perLag_2Mods.R'))
+source(here::here('scripts', 'g_07_plot_LRCurve_perExposure_2Mods.R'))
 
 # 3b Tell the analyst that the analysis is done
 cat('completed 0_02 at ', paste(Sys.time()), 

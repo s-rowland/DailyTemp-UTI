@@ -10,7 +10,7 @@
 
 # N: Notes
 # 0: Preparation 
-# 1: Create Fake Cases
+# 1: Create Fake Temperature Data
 
 ####**************
 #### N: Notes #### 
@@ -38,10 +38,9 @@ if (!exists('ran_0_01')){
 NDays <- 365 + 366 + 365
 
 # 1b Create a vector of fips Codes
-activefips <- c(6001, 6003, 6005)
+activefips <- c(6001, 6003, 6005, 6006, 6007, 6008, 6009)
 
 # 1c Begin dataset with Index variable
-
 temper <- expand_grid(
   dIndex = c(1:NDays),
   fips = activefips)
@@ -62,10 +61,13 @@ temper$tmean <- rnorm(nrow(temper), 10 + 10* sin(2*pi*temper$dIndex / 366), 2)
 temper <- temper %>% 
   dplyr::select(-contains('Index'))
 
-# 1f Save data 
+# 1f Add RH 
+temper$avgrelhum <- rnorm(nrow(temper), 0, 10)
+
+# 1g Save data 
 temper %>% 
   write_fst(here::here('data', 'intermediateData',
-                       'temperature_fips_fake.fst'))
+                       'fake_weather.fst'))
 
-# 1g Clean up environment 
+# 1h Clean up environment 
 rm(activefips, temper, NDays)

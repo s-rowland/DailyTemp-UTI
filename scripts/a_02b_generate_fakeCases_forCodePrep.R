@@ -45,31 +45,64 @@ NDays <- 366 + 365
 # 1b Create a vector of fips Codes
 # In the final code we should just pull fips Codes from real exposure dataset 
 activefips <- read_fst(here::here('data', 'intermediateData',
-                                 'temperature_fips_fake.fst')) %>% 
+                                 'fake_temperature.fst')) %>% 
   dplyr::select(fips) %>% 
   distinct() 
 
+temper <- read_fst(here::here('data', 'intermediateData',
+                    'fake_temperature.fst')) 
 # 1c Begin dataset with Index variable
 cases <- expand_grid(
   dIndex = c(1:NDays),
-  fips = activefips$fips)
+  fips = activefips$fips) 
 
-# 1d Create case counts variable
-set.seed(1234)
-cases$case_count <- floor(rnorm(nrow(cases), 10 + 2* sin(2*pi*cases$dIndex / 366), 2))
-     
 # 1e Create Admit date variable 
 # I prefer to keep a column of the date as a string, 
 # because sometime excel will autocorrect dates to whatever excel thinks is the 
 # right interpretation. 
 cases <- cases %>%  
-  mutate(ADMDT = parse_date_time('1/1/1999', 'mdy', tz = 'America/Los_Angeles') + 
+  mutate(adate = parse_date_time('1/1/1999', 'mdy', tz = 'America/Los_Angeles') + 
            dIndex*60*60*24) %>% 
-  mutate(ADMDT = str_sub(str_remove_all(ADMDT, '-'), 0, 8)) %>%
+  mutate(adate = str_sub(str_remove_all(adate, '-'), 0, 8)) %>%
   dplyr::select(-contains('Index')) %>% 
   distinct()
 
-# 1f Save data 
+cases <- cases %>% 
+  inner_join(temper, by = c('fips', 'adate')) %>% 
+  mutate(tmeanLag1 = lag(tmean, 1), 
+         tmeanLag2 = lag(tmean, 2),
+         tmeanLag3 = lag(tmean, 3),
+         tmeanLag4 = lag(tmean, 4))
+  
+# 1d Create case counts variable
+set.seed(1234)
+cases$case_count <- floor(rnorm(nrow(cases), 10 + 0.25*cases$tmean + 
+                                  0.5*cases$tmeanLag1+ 0.25*cases$tmeanLag2 + 
+                                  0.1*cases$tmeanLag3+ 0.05*cases$tmeanLag4, 2))
+
+cases <- cases %>% 
+  dplyr::select(-tmean, -avgrelhum) %>% 
+  filter(complete.cases(cases))
+
+# add some zero dates 
+cases <- cases %>% mutate(case_count = if_else(case_count <9, 0, case_count))
+
+# remove the zero cases 
+cases <- cases %>% 
+  filter(case_count != 0)
+
+# 1f Add sutter county variable 
+cases <- cases %>% 
+  mutate(sutter_county = if_else(fips == 6004, "sutter county", "not sutter"))
+
+# 1g Add counts of female UTI
+cases <- cases %>% 
+  mutate(case_count_sex_f = abs(case_count - 2))
+
+# 1h Save data 
 cases %>% 
   write_fst(here::here('data', 'intermediateData', 
                                   'cases_fake.fst'))
+
+# 1i Cleanup 
+rm(activefips, NDays, cases)

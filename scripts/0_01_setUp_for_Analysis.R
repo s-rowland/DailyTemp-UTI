@@ -40,8 +40,8 @@ ran_0_01 <- 'ran_0_01'
 # 0c Set user - this only controls the outputs path 
 # the user should be 'Analyst' unless you are the code reviewer who 
 # is running the code to test for reproducibility
-user <- 'Analyst' 
-# user <- 'Reviewer'
+#user <- 'Analyst' 
+ user <- 'Reviewer'
 
 # 0d Set outcomeName  
 # this also controls the outputs path 
@@ -49,7 +49,7 @@ user <- 'Analyst'
 # reproducibility. 
 # Ideally both the analyst and the reviewer run the code with the fake data 
 # and compare results to confirm reproducibility
-# outcomeName <- 'UTI'
+#outcomeName <- 'UTI'
 outcomeName <- 'fake'
 
 ####**********************
@@ -82,6 +82,7 @@ project.folder <- paste0(print(here::here()),'/')
   scripts.folder  <- paste0(project.folder, 'scripts/')
       functions.folder  <- paste0(scripts.folder, 'functions/')
   if(outcomeName == 'UTI'){outPath <- 'outputs'}
+  if(outcomeName == 'UTI' & user == 'Reviewer'){outPath <- 'outputsUTI_reviewer'}
   if(outcomeName == 'fake' & user == 'Analyst'){outPath <- 'outputsFake_analyst'}
   if(outcomeName == 'fake' & user == 'Reviewer'){outPath <- 'outputsFake_reviewer'}
   outputs.folder <- paste0(project.folder, outPath, '/')
@@ -105,7 +106,6 @@ lapply(folder.names, create_folders)
 
 # 2e Clean up 
 rm(list=ls(pattern='folder'))
-rm(user)
 
 ####*************************
 #### 3: Source Functions #### 

@@ -30,7 +30,8 @@ read_estimates <- function(Sensitivity, SubSetVar, SubSet,
 
   # 1b Identify the selected model constraints if appropriate
   if(ERConstraint == 'Selected' & LRConstraint == 'Selected'){
-    SelectedModel <- SelectedModels %>% 
+    SelectedModel <- read_csv(here::here(outPath, 'tables',
+                                         'SelectedModels.csv')) %>% 
       filter(Sensitivity == !!Sensitivity, 
              SubSetVar == !!SubSetVar, SubSet == !!SubSet)
     ERConstraint <- SelectedModel$ERConstraint[1]

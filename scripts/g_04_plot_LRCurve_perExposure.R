@@ -20,7 +20,7 @@
 ####********************
 
 # Na: Smooth plot? 
-# In our datasetp, time is not smooth, but a step function - either you are in 
+# In our data setup, time is not smooth, but a step function - either you are in 
 # Day 1 or Day 2, there is no such thing in our data as Day 1.5. 
 # Day 1.5 would roughly correspond to exposure over the period of noon of Day 1 
 # to noon of Day 2. 
@@ -53,9 +53,10 @@ if (!exists('ran_g_01')){
 ####*********************************
 
 # 1a Name function 
-plot_laggedER <- function(Sensitivity, SubSetVar, SubSet, 
+plot_LRCurve_perExposure <- function(Sensitivity, SubSetVar, SubSet, 
                           ERConstraint, LRConstraint, Contrast){
   # Sensitivity <- 'Main' ; SubSetVar <- 'FullSet'; SubSet <- 'FullSet'
+  # ERConstraint <- 'Selected'; LRConstraint <- 'Selected'
   # Contrast <- '0595'
   
   ####**************************************
@@ -63,8 +64,9 @@ plot_laggedER <- function(Sensitivity, SubSetVar, SubSet,
   ####**************************************
   
   # 1A.a Read model estimates
+  # 2A.a Read Table 
   est.table <- read_estimates(Sensitivity, SubSetVar, SubSet, 
-                                      ERConstraint, LRConstraint, 'EstInd')
+                              ERConstraint, LRConstraint, 'EstInd')
   
   # 1A.b Keep only relevant exposure contrast
   # 1A.b.i Determine the relevant Labels
@@ -121,9 +123,13 @@ plot_laggedER <- function(Sensitivity, SubSetVar, SubSet,
   
   # 1B.b Print plots
   png(here::here(outPath, 'plots',
-                 paste0('fullsetLagResponse_', Contrast, '.png')), 
+                 paste0('g04_LagResponse_', Sensitivity, '_', SubSetVar, '_', 
+                        SubSet, '_', ERConstraint, "_", LRConstraint, "_", 
+                        Contrast, '.png')), 
       width = WW.fig*2, height = HH.fig*0.75, res =RR.fig*1)
-  print(TP.a)
+  print(tag_facet(TP.a, 
+                  tag_pool = paste(distinct(est.table,CounterfactualTemp)$CounterfactualTemp, ' deg C'), 
+        x = -0.5, y = 0.75*max(est.table$uci.pc, na.rm=TRUE)))
   dev.off()
 }
 
@@ -132,4 +138,19 @@ plot_laggedER <- function(Sensitivity, SubSetVar, SubSet,
 ####*********************
 
 # 2a Main Models
-plot_laggedER('Main', 'FullSet', 'FullSet', 'Selected', 'Selected', '0595')
+plot_LRCurve_perExposure('Main', 'FullSet', 'FullSet', 'Selected', 'Selected', '0595')
+plot_LRCurve_perExposure('14DayLag', 'FullSet', 'FullSet', 'Selected', 'Selected', '0595')
+plot_LRCurve_perExposure('21DayLag', 'FullSet', 'FullSet', 'Selected', 'Selected', '0595')
+
+plot_LRCurve_perExposure('14DayLag', 'FullSet', 'FullSet', '3dfevenknots', '3dfevenknots', '0595')
+plot_LRCurve_perExposure('21DayLag', 'FullSet', 'FullSet', '3dfevenknots', '3dfevenknots', '0595')
+
+plot_LRCurve_perExposure('14DayLag', 'FullSet', 'FullSet', '3dfevenknots', '4dflogknots', '0595')
+plot_LRCurve_perExposure('21DayLag', 'FullSet', 'FullSet', '3dfevenknots', '4dflogknots', '0595')
+
+plot_LRCurve_perExposure('14DayLag', 'FullSet', 'FullSet', '3dfevenknots', 'psp',  '0595')
+plot_LRCurve_perExposure('21DayLag', 'FullSet', 'FullSet', '3dfevenknots', 'psp',  '0595')
+
+
+plot_LRCurve_perExposure('noConstraint', 'FullSet', 'FullSet', 
+                         '3dfevenknots', 'free', '0595')
