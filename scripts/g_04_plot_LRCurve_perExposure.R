@@ -1,4 +1,4 @@
-# Plot Lag-Response Curve for a Given Exposure Contrast
+# Plot Lag-Response Curve for a Given Exposure contrast
 # Present Results
 # Daily Temperature-UTI Project 
 # Joan Casey & Sebastian T. Rowland
@@ -40,12 +40,12 @@
 # 0a Create the folder structure, if you haven't already
 if (!exists('ran_0_01')){
   here::i_am('README.md')
-  source(here::here('scripts', '0_01_setUp_for_Analysis.R'))
+  source(here::here('scripts', '0_01_setUp_for_analysis.R'))
 }
 
 # 0b Create the plotting objects, if you haven't already
 if (!exists('ran_g_01')){
-  source(here::here('scripts', 'g_01_set_PlottingObjects.R'))
+  source(here::here('scripts', 'G_01_set_plottingObjects.R'))
 }
 
 ####*********************************
@@ -53,11 +53,11 @@ if (!exists('ran_g_01')){
 ####*********************************
 
 # 1a Name function 
-plot_LRCurve_perExposure <- function(Sensitivity, SubSetVar, SubSet, 
-                          ERConstraint, LRConstraint, Contrast){
-  # Sensitivity <- 'Main' ; SubSetVar <- 'FullSet'; SubSet <- 'FullSet'
-  # ERConstraint <- 'Selected'; LRConstraint <- 'Selected'
-  # Contrast <- '0595'
+plot_LRCurve_perExposure <- function(sensitivity, subSetVar, subSet, 
+                          ERConstraint, LRConstraint, contrast){
+  # sensitivity <- 'main' ; subSetVar <- 'fullSet'; subSet <- 'fullSet'
+  # ERConstraint <- 'selected'; LRConstraint <- 'selected'
+  # contrast <- '05_95'
   
   ####**************************************
   #### 1A: Wrangle Main Model Estimates ####
@@ -65,29 +65,38 @@ plot_LRCurve_perExposure <- function(Sensitivity, SubSetVar, SubSet,
   
   # 1A.a Read model estimates
   # 2A.a Read Table 
-  est.table <- read_estimates(Sensitivity, SubSetVar, SubSet, 
+  est.table <- readEstimates(sensitivity, subSetVar, subSet, 
                               ERConstraint, LRConstraint, 'EstInd')
   
   # 1A.b Keep only relevant exposure contrast
   # 1A.b.i Determine the relevant Labels
-  if(Contrast == '0595'){labelSet = c('per05', 'per95')}
+  if(contrast == '05_95'){labelSet = c('per05', 'per95')}
+  if(contrast == '05_25'){labelSet = c('per05', 'per25')}
   # 1A.b.ii Isolate the relevant exposure constrats
   est.table <- est.table %>% 
-    filter(Label %in% labelSet)
+    filter(label %in% labelSet)
   
   # 1A.c Wrangle estimates 
   est.table <- est.table %>% 
-    dplyr::select(-Sensitivity, -SubSetVar, -SubSet, -IndCumul, -Label) %>%
-    gather('LagName', 'Estimate', -CounterfactualTemp) %>% 
-    mutate(VarName = str_sub(LagName, 1, 3), Lag = as.numeric(str_sub(LagName, 11))) %>%  
-    dplyr::select(-LagName) %>%
-    spread(VarName, Estimate) %>% 
-    mutate(fit.pc = convert_to_percent(fit), 
-           lci.pc = convert_to_percent(lci), uci.pc = convert_to_percent(uci)) 
+    dplyr::select(-sensitivity, -subSetVar, -subSet, -indCumul, -label) %>%
+    gather('lag_name', 'estimate', -counterfactual_temp) %>% 
+    mutate(var_name = str_sub(lag_name, 1, 3), lag_day = as.numeric(str_sub(lag_name, 11))) %>%  
+    dplyr::select(-lag_name) %>%
+    spread(var_name, estimate) %>% 
+    mutate(fit_pc = convertToPercent(fit), 
+           lci_pc = convertToPercent(lci), uci_pc = convertToPercent(uci)) 
   
   # 1A.d Convert CounterfactualTemp to character so that you can use discrete color scale
   est.table <- est.table %>% 
-    mutate(CounterfactualTemp = as.character(round(CounterfactualTemp, 2)))
+    mutate(counterfactual_temp = as.character(round(counterfactual_temp, 2))) 
+  est.table <- est.table %>% 
+    mutate(counterfactual_temp =
+             factor(counterfactual_temp,
+                    levels = c(min(as.numeric(est.table$counterfactual_temp)), 
+                               max(as.numeric(est.table$counterfactual_temp)))))
+  # set range of y-axis
+  if(contrast == '0_100'){est.min <- -20; est.max <- 10}
+  if(contrast == '05_95'){est.min <- -7; est.max <- 6}
   
   ####*******************
   #### 1B: Make Plot ####
@@ -95,20 +104,19 @@ plot_LRCurve_perExposure <- function(Sensitivity, SubSetVar, SubSet,
   
   # 1B.a Create plot 
   TP.a <- est.table %>%
-    ggplot(aes(Lag)) + 
+    ggplot(aes(lag_day)) + 
     geom_hline(yintercept=0, color ='grey' ) + 
-    geom_ribbon(aes(ymin= lci.pc,  ymax = uci.pc, fill = CounterfactualTemp), 
+    geom_ribbon(aes(ymin= lci_pc,  ymax = uci_pc, fill = counterfactual_temp), 
                 alpha  = 0.35, col=NA)+
-    geom_line(aes(y = fit.pc, col = CounterfactualTemp), size = 2)+ 
-    facet_grid(.~CounterfactualTemp) +
-    scale_fill_manual(values = ColorArray$TempContrast) + 
-    scale_color_manual(values = ColorArray$TempContrast) + 
+    geom_line(aes(y = fit_pc, col = counterfactual_temp), size = 2)+ 
+    facet_grid(.~counterfactual_temp) +
+    scale_fill_manual(values = colorArray$tempContrast) + 
+    scale_color_manual(values = colorArray$tempContrast) + 
     labs(y = paste0('Change in UTI Rate (%)'), 
          x = paste0('Days Since Exposure')) + 
-    #coord_cartesian(ylim = c(Ymin, Ymax), expand = TRUE,
-     #               default = FALSE, clip = 'off') + 
-    #scale_y_continuous(breaks = seq(Ymin, Ymax, by = YStep)) +
-   # scale_x_continuous(breaks = c(0, 5, 10, 15, 20, 25, 30, 35)) +
+   scale_x_continuous(breaks = c(0, 3, 7, 10, 13)) +
+    scale_y_continuous(breaks = seq(est.min, est.max, by = 2), 
+                       limits = c(est.min, est.max)) +
     tema + 
     theme(strip.background = element_blank(), 
           strip.text = element_blank())  +
@@ -123,13 +131,13 @@ plot_LRCurve_perExposure <- function(Sensitivity, SubSetVar, SubSet,
   
   # 1B.b Print plots
   png(here::here(outPath, 'plots',
-                 paste0('g04_LagResponse_', Sensitivity, '_', SubSetVar, '_', 
-                        SubSet, '_', ERConstraint, "_", LRConstraint, "_", 
-                        Contrast, '.png')), 
-      width = WW.fig*2, height = HH.fig*0.75, res =RR.fig*1)
+                 paste0('g04_LagResponse_', sensitivity, '_', subSetVar, '_', 
+                        subSet, '_', ERConstraint, "_", LRConstraint, "_", 
+                        contrast, '.png')), 
+      width = ww.fig*2, height = hh.fig*0.75, res =rr.fig*1)
   print(tag_facet(TP.a, 
-                  tag_pool = paste(distinct(est.table,CounterfactualTemp)$CounterfactualTemp, ' deg C'), 
-        x = -0.5, y = 0.75*max(est.table$uci.pc, na.rm=TRUE)))
+                  tag_pool = paste(distinct(est.table,counterfactual_temp)$counterfactual_temp, ' deg C'), 
+        x = -0.5, y = 0.75*max(est.table$uci_pc, na.rm=TRUE)))
   dev.off()
 }
 
@@ -138,19 +146,11 @@ plot_LRCurve_perExposure <- function(Sensitivity, SubSetVar, SubSet,
 ####*********************
 
 # 2a Main Models
-plot_LRCurve_perExposure('Main', 'FullSet', 'FullSet', 'Selected', 'Selected', '0595')
-plot_LRCurve_perExposure('14DayLag', 'FullSet', 'FullSet', 'Selected', 'Selected', '0595')
-plot_LRCurve_perExposure('21DayLag', 'FullSet', 'FullSet', 'Selected', 'Selected', '0595')
-
-plot_LRCurve_perExposure('14DayLag', 'FullSet', 'FullSet', '3dfevenknots', '3dfevenknots', '0595')
-plot_LRCurve_perExposure('21DayLag', 'FullSet', 'FullSet', '3dfevenknots', '3dfevenknots', '0595')
-
-plot_LRCurve_perExposure('14DayLag', 'FullSet', 'FullSet', '3dfevenknots', '4dflogknots', '0595')
-plot_LRCurve_perExposure('21DayLag', 'FullSet', 'FullSet', '3dfevenknots', '4dflogknots', '0595')
-
-plot_LRCurve_perExposure('14DayLag', 'FullSet', 'FullSet', '3dfevenknots', 'psp',  '0595')
-plot_LRCurve_perExposure('21DayLag', 'FullSet', 'FullSet', '3dfevenknots', 'psp',  '0595')
+plot_LRCurve_perExposure('main', 'fullSet', 'fullSet', 'selected', 'selected', '05_95')
+plot_LRCurve_perExposure('main', 'fullSet', 'fullSet', 'selected', 'selected', '05_25')
+plot_LRCurve_perExposure('main', 'sex', 'f', 'selected', 'selected', '05_95')
+plot_LRCurve_perExposure('main', 'sutter_county', 'sutter', 'selected', 'selected', '05_95')
+plot_LRCurve_perExposure('main', 'sutter_county', 'not_sutter', 'selected', 'selected', '05_95')
 
 
-plot_LRCurve_perExposure('noConstraint', 'FullSet', 'FullSet', 
-                         '3dfevenknots', 'free', '0595')
+

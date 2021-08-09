@@ -25,7 +25,7 @@
 # Na Description
 # This code is the function for fitting all of the models 
 # for the analysis 
-# except for the negative control exposure sensitivity analysis 
+# except for the negative control exposure aensitivity analysis 
 # By using the same code, we can ensure that the exact same dataprocessing 
 # and output is applied to each model, 
 # without updating many individual codes 
@@ -46,20 +46,20 @@
 ####***********************
 
 # 1a Name function
-analyze_oneLagTemp <- function(Sensitivity, SubSetVar, SubSet,
-                             ERConstraint, ActiveLag){
-   #Sensitivity <- 'Main'; 
-   #ERConstraint <- '3dfevenknots'; ActiveLag <- 'Lag00';
-   #SubSetVar <- 'FullSet'; SubSet <- 'FullSet';  SaveModel <- 'SaveAIC'
-# set this instead to test subsetting by a patient characteristic
-  # SubSetVar <- 'Sex'; SubSet <- 'F';  SaveModel <- 'SaveAIC'
+analyzeOneLagTemp <- function(aensitivity, subSetVar, subSet,
+                             ERConstraint, activeLag){
+   #aensitivity <- 'Main'; 
+   #ERConstraint <- '3dfevenknots'; activeLag <- 'Lag00';
+   #subSetVar <- 'FullSet'; subSet <- 'FullSet';  SaveModel <- 'SaveAIC'
+# set this instead to test subSetting by a patient characteristic
+  # subSetVar <- 'Sex'; subSet <- 'F';  SaveModel <- 'SaveAIC'
   
-  # set this instead to test subsetting by a time-varying characteristic
-  # SubSetVar <- 'Season'; SubSet <- 'Summer';  SaveModel <- 'SaveAIC'
+  # set this instead to test subSetting by a time-varying characteristic
+  # subSetVar <- 'Season'; subSet <- 'Summer';  SaveModel <- 'SaveAIC'
   
   # 1b Create ModelName 
-  ModelName <- paste(Sensitivity, SubSetVar, SubSet, 
-                     ERConstraint, ActiveLag, sep = '_')
+  ModelName <- paste(aensitivity, subSetVar, subSet, 
+                     ERConstraint, activeLag, sep = '_')
   
   ####**************************
   #### 2: Create Variables ####
@@ -77,7 +77,7 @@ analyze_oneLagTemp <- function(Sensitivity, SubSetVar, SubSet,
   dta <- dta %>% 
     mutate(DayIndex = as.numeric(ADMDateTime - minDateTime, 'days'))
   
-  # Variables for testing subsetting
+  # Variables for testing subSetting
   dta <- dta %>% 
     mutate(case_count_Sex_F = case_count - 1) %>% 
     mutate(MM = month(ADMDateTime)) %>% 
@@ -98,21 +98,21 @@ analyze_oneLagTemp <- function(Sensitivity, SubSetVar, SubSet,
   # so in this section we just set the outcome_count variable to whatever column 
   # we can to use 
   
-  # note that we can also use this section to do subsetting by patient 
+  # note that we can also use this section to do subSetting by patient 
   # characteristics, for example, we could have a column of counts for UTI from 
   # subjects over 65, and a column of counts for subjects under 65. 
-  # for such subsetting, I think it would be better to keep the sensitivity 
-  # as 'main' and instead vary the SubSet parameters 
-  # so that the sensitivity term only distinguishes the main results 
-  # from sensitivity results. 
+  # for such subSetting, I think it would be better to keep the aensitivity 
+  # as 'main' and instead vary the subSet parameters 
+  # so that the aensitivity term only distinguishes the main results 
+  # from aensitivity results. 
   
-  if(SubSet == 'FullSet'){
+  if(subSet == 'FullSet'){
     dta <- dta %>% mutate(outcome_count = case_count)
     }
-# we would also need to add any other temporal or spatial subsets to the 
+# we would also need to add any other temporal or spatial subSets to the 
   # if statement
-  if(Sensitivity == 'Main' & !SubSetVar %in% c('FullSet', 'Season')){
-    countVar = paste0('case_count_', SubSetVar, '_', SubSet)
+  if(aensitivity == 'Main' & !subSetVar %in% c('FullSet', 'Season')){
+    countVar = paste0('case_count_', subSetVar, '_', subSet)
     dta$outcome_count <- dta[, countVar]
   }
   
@@ -121,18 +121,18 @@ analyze_oneLagTemp <- function(Sensitivity, SubSetVar, SubSet,
   ####******************************************************
 
   # 4a Apply any stratification by time-varying or spatially-varying factors
-  # in this section, we first rename the column for that subsetting variable 
-  # to SUBSETVAR 
+  # in this section, we first rename the column for that subSetting variable 
+  # to subSetVAR 
   # we then apply a filter to only keep observations that match the particular 
-  # subset we are interested in. 
+  # subSet we are interested in. 
   
-  # Right now it is set up to only subset for the season variable 
+  # Right now it is set up to only subSet for the season variable 
   # if we create such a variable 
   # if we want to add other variable, we can just add them to the if statement
-  if(SubSetVar == 'Season'){
+  if(subSetVar == 'Season'){
     dta <- dta %>% 
-      rename(SUBSETVAR = !!SubSetVar) %>%
-      filter(SUBSETVAR == SubSet)
+      rename(subSetVAR = !!subSetVar) %>%
+      filter(subSetVAR == subSet)
   }
   
   ####**************************
@@ -148,11 +148,11 @@ analyze_oneLagTemp <- function(Sensitivity, SubSetVar, SubSet,
   
   # rename lag variable 
   dta <- dta %>% 
-    rename(ActiveLagT := !!paste0('t', ActiveLag), 
-           ActiveLagR := !!paste0('r', ActiveLag))
+    rename(activeLagT := !!paste0('t', activeLag), 
+           activeLagR := !!paste0('r', activeLag))
   
   # create onebasis 
-  ob.temp <- onebasis(dta$ActiveLagT, fun = 'ns', df = 3)
+  ob.temp <- onebasis(dta$activeLagT, fun = 'ns', df = 3)
                       
   ####*************************
   #### 6: Fit Health Model ####
@@ -161,7 +161,7 @@ analyze_oneLagTemp <- function(Sensitivity, SubSetVar, SubSet,
   # 6a Fit Main Model
   # note that we can change the distribution family to poisson if the dispersion 
   # factor is 1.
-  mod <- gnm(outcome_count ~ ob.temp, #+ ActiveLagR, 
+  mod <- gnm(outcome_count ~ ob.temp, #+ activeLagR, 
              family = quasipoisson(link= 'log'), 
              data = dta, 
              eliminate = matchID) # eliminate is the matching variable
@@ -227,15 +227,15 @@ analyze_oneLagTemp <- function(Sensitivity, SubSetVar, SubSet,
   
     # 7B.e Extract coefficient fit and CI 
     fit.table <- as.data.frame(est$matRRfit)  
-    colnames(fit.table) <- paste0('fit.rr.lag', as.numeric(str_remove_all(ActiveLag, '[A-z]')))
+    colnames(fit.table) <- paste0('fit.rr.lag', as.numeric(str_remove_all(activeLag, '[A-z]')))
     fit.table <- fit.table %>%  
       mutate(CounterfactualTemp = as.numeric(row.names(fit.table)))
 
     lci.table <- as.data.frame(est$matRRlow)  
-    colnames(lci.table) <- paste0('lci.rr.lag', as.numeric(str_remove_all(ActiveLag, '[A-z]')))
+    colnames(lci.table) <- paste0('lci.rr.lag', as.numeric(str_remove_all(activeLag, '[A-z]')))
     
     uci.table <- as.data.frame(est$matRRhigh)  
-    colnames(uci.table) <- paste0('uci.rr.lag', as.numeric(str_remove_all(ActiveLag, '[A-z]')))
+    colnames(uci.table) <- paste0('uci.rr.lag', as.numeric(str_remove_all(activeLag, '[A-z]')))
     
     # 7B.f Combine fit and se for individual lags 
     # note that all RR are relative to the exposure reference value we set above 

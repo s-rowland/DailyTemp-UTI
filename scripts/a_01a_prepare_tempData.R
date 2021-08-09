@@ -21,7 +21,7 @@
 ####*********************************
 
 # 1a Readin Sutter counties dataframe
-sutter_counties <- read_csv(here::here('data', 'preparedData', 
+sutter_counties <- read_csv(here::here('data', 'prepared', 
                                        paste0('sutter_counties', '.csv')))
                            
 # 1b Read in temp data
@@ -57,5 +57,5 @@ temper2 <- temper2 %>%
 # 1i Save data 
 # I use the fst format because it saves memory and it faster to read/write
 temper2 %>% 
-  write_fst(here::here('data', 'intermediateData', 
+  write_fst(here::here('data', 'intermediate', 
                        'daily_weather.fst'))

@@ -33,8 +33,8 @@
 #### 1: Begin Function ####
 ####***********************
 
-perform_gridSearch <- function(candidateConstraintsGrid, Sensitivity, SubSetVar, SubSet){
-  # Sensitivity <- 'Main';  SubSetVar <- 'FullSet'; SubSet <- 'FullSet'
+performGridSearch <- function(candidateConstraintsGrid, sensitivity, subSetVar, subSet){
+  # sensitivity <- 'Main';  subSetVar <- 'FullSet'; subSet <- 'FullSet'
   
   # 1a Add progress bar
   # Silenced for now as progress bar is not behaving well. 
@@ -51,10 +51,10 @@ perform_gridSearch <- function(candidateConstraintsGrid, Sensitivity, SubSetVar,
   for(i in 1:nrow(candidateConstraintsGrid)){
     # i <- 1
     # 2b Fit model with candidate constraints
-    analyze_dlnmTemp(Sensitivity, SubSetVar, SubSet, 
+    analyzeTempDLNM(sensitivity, subSetVar, subSet, 
                      candidateConstraintsGrid$ERConstraint[i], 
                      candidateConstraintsGrid$LRConstraint[i], 
-                     'SaveAIC')
+                     'saveAIC')
   }
   
   ####******************************
@@ -62,13 +62,13 @@ perform_gridSearch <- function(candidateConstraintsGrid, Sensitivity, SubSetVar,
   ####******************************
   
   # 3a Readin table of model AICs  
-  aic.table0 <- read_csv(here::here(outPath, 'tables', 'Model_AIC.csv'), 
+  aic.table0 <- read_csv(here::here(outPath, 'tables', 'model_AIC.csv'), 
                          col_types = 'cccccddT')
   
   # 3c Keep only the AIC of models with the same parameters (aside from constraints)
   aic.table <- aic.table0 %>% 
-    filter(Sensitivity == !!Sensitivity & 
-           SubSetVar == !!SubSetVar & SubSetVar == !!SubSetVar)
+    filter(sensitivity == !!sensitivity & 
+           subSetVar == !!subSetVar & subSet == !!subSet)
   
   # 3d Find minAIC
   AIC.min <- min(aic.table$AIC)
@@ -88,39 +88,39 @@ perform_gridSearch <- function(candidateConstraintsGrid, Sensitivity, SubSetVar,
     
   # 3i Add to previous AIC table
   aicWeights.table <- aic.table %>% 
-      dplyr::select(Sensitivity, SubSetVar, SubSet, ERConstraint, LRConstraint, 
-                    AIC, AkaikeWeight, RunDate) %>%
-     bind_rows(read_csv(here::here(outPath, 'tables', 'Model_AIC.csv'), 
+      dplyr::select(sensitivity, subSetVar, subSet, ERConstraint, LRConstraint, 
+                    AIC, AkaikeWeight, run_date) %>%
+     bind_rows(read_csv(here::here(outPath, 'tables', 'model_AIC.csv'), 
                         col_types = 'cccccddT'))
   
   # 3j Keep only the most recent versions of each model and save 
   aicWeights.table %>% 
-      group_by(Sensitivity, SubSetVar, SubSet, ERConstraint, LRConstraint) %>% 
-      arrange(desc(RunDate)) %>% 
+      group_by(sensitivity, subSetVar, subSet, ERConstraint, LRConstraint) %>% 
+      arrange(desc(run_date)) %>% 
       slice(0:1) %>% 
-      filter(!is.na(Sensitivity)) %>%
-      write_csv(here::here(outPath, 'tables', 'Model_AIC.csv'))
+      filter(!is.na(sensitivity)) %>%
+      write_csv(here::here(outPath, 'tables', 'model_AIC.csv'))
     
   ####*********************
   #### 4: Select Model ####
   ####*********************
   
   # 4a Identify selected model 
-  SelectedModel <- aic.table %>% 
+  selectedModel <- aic.table %>% 
       filter(AIC == AIC.min) %>% 
-      dplyr::select(Sensitivity, SubSetVar, SubSet, ERConstraint, LRConstraint, 
-                    RunDate) 
+      dplyr::select(sensitivity, subSetVar, subSet, ERConstraint, LRConstraint, 
+                    run_date) 
   
   # 4b Add to previous selected models 
-  SelectedModels.table <- SelectedModel %>% 
-    bind_rows(read_csv(here::here(outPath, 'tables', 'SelectedModels.csv'),  
+  selectedModels.table <- selectedModel %>% 
+    bind_rows(read_csv(here::here(outPath, 'tables', 'selected_constraints.csv'),  
                        col_types = 'cccccT')) 
   
   # 4c Keep only the AIC of the most recent versions of each model and save 
-  SelectedModels.table %>%
-    group_by(Sensitivity, SubSetVar, SubSet) %>% 
-    arrange(desc(RunDate)) %>% 
+  selectedModels.table %>%
+    group_by(sensitivity, subSetVar, subSet) %>% 
+    arrange(desc(run_date)) %>% 
     slice(0:1) %>% 
-    filter(!is.na(Sensitivity)) %>%
-    write_csv(here::here(outPath, 'tables', 'SelectedModels.csv'))
+    filter(!is.na(sensitivity)) %>%
+    write_csv(here::here(outPath, 'tables', 'selected_constraints.csv'))
 }

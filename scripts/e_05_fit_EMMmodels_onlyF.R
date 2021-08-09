@@ -72,28 +72,21 @@ candidateConstraintsGrid <- expand_grid(
   ERConstraint = c('3dfEvenKnots','4dfEvenKnots', '5dfEvenKnots'),
   LRConstraint = c('3dfLogKnots', '4dfLogKnots'))
 
-# 2b Perform grid search to identify optional constraints
-# when we run these models, we do not save the results; only their AIC/QAIC
-performGridSearch(candidateConstraintsGrid, 'main', 'sex', 'f')
-  
-# 2c Get estimates from model with selected constraints
-identifySelectedConstraintsFitModel('main', 'sex', 'f')
-
 ####**********************************
 #### 3: Fit Catchement Area Models ####
 ####**********************************
 
 # 3a Fit Alpine-only model
 # 3a.i Perform grid search to identify optional constraints
-performGridSearch(candidateConstraintsGrid, 'main', 'sutter_county', 'sutter')
+performGridSearch(candidateConstraintsGrid, 'onlyF', 'sutter_county', 'sutter')
 # 3a.ii Get estimates from model with selected constraints
-identifySelectedConstraintsFitModel('main', 'sutter_county', 'sutter')
+identifySelectedConstraintsFitModel('onlyF', 'sutter_county', 'sutter')
 
 # 3a Fit KPSC-only model
 # 3a.i Perform grid search to identify optional constraints
-performGridSearch(candidateConstraintsGrid, 'main', 'sutter_county', 'not_sutter')
+performGridSearch(candidateConstraintsGrid, 'onlyF', 'sutter_county', 'not_sutter')
 # 3a.ii Get estimates from model with selected constraints
-identifySelectedConstraintsFitModel('main', 'sutter_county', 'not_sutter')
+identifySelectedConstraintsFitModel('onlyF', 'sutter_county', 'not_sutter')
 
 ####****************************
 #### 4: Fit Seasonal Models ####
@@ -101,27 +94,27 @@ identifySelectedConstraintsFitModel('main', 'sutter_county', 'not_sutter')
 
 # 4a fit winter-only model
 # 4a.i Perform grid search to identify optional constraints
-performGridSearch(candidateConstraintsGrid, 'main', 'season', 'win')
+performGridSearch(candidateConstraintsGrid, 'onlyF', 'season', 'win')
 # 4a.ii Get estimates from model with selected constraints
-identifySelectedConstraintsFitModel('main', 'season', 'win')
+identifySelectedConstraintsFitModel('onlyF', 'season', 'win')
 
 # 4b fit winter-only model
 # 4b.i Perform grid search to identify optional constraints
-performGridSearch(candidateConstraintsGrid, 'main', 'season', 'spr')
+performGridSearch(candidateConstraintsGrid, 'onlyF', 'season', 'spr')
 # 4b.ii Get estimates from model with selected constraints
-identifySelectedConstraintsFitModel('main', 'season', 'spr')
+identifySelectedConstraintsFitModel('onlyF', 'season', 'spr')
 
 # 4c fit winter-only model
 # 4c.i Perform grid search to identify optional constraints
-performGridSearch(candidateConstraintsGrid, 'main', 'season', 'sum')
+performGridSearch(candidateConstraintsGrid, 'onlyF', 'season', 'sum')
 # 4c.ii Get estimates from model with selected constraints
-identifySelectedConstraintsFitModel('main', 'season', 'sum')
+identifySelectedConstraintsFitModel('onlyF', 'season', 'sum')
 
 # 4d fit winter-only model
 # 4d.i Perform grid search to identify optional constraints
-performGridSearch(candidateConstraintsGrid, 'main', 'season', 'fal')
+performGridSearch(candidateConstraintsGrid, 'onlyF', 'season', 'fal')
 # 4d.ii Get estimates from model with selected constraints
-identifySelectedConstraintsFitModel('main', 'season', 'fal')
+identifySelectedConstraintsFitModel('onlyF', 'season', 'fal')
 
 # 4e Tell the analyst that the emm models are done
 toc()

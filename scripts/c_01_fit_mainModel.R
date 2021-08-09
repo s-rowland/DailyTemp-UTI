@@ -28,31 +28,27 @@
 #### 0: Preparation #### 
 ####********************
 
-# 0a Tell the analyst that the script is beginning 
-StartTime_c_01 <- Sys.time()
-print(paste('begin c_01 at', StartTime_c_01))
-
-# 0b Create the folder structure, if you haven't already
+# 0a Create the folder structure, if you haven't already
 if (!exists('ran_0_01')){
   here::i_am('README.md')
-  source(here::here('scripts', '0_01_setUp_for_Analysis.R'))
+  source(here::here('scripts', '0_01_setUp_for_analysis.R'))
 }
+
+# 0b Begin the timer 
+tic('wknd Model Completed')
 
 ####******************
 #### 1: Read Data ####
 ####******************
 
 # 1a Bring in the dataset of the matched days with exposure
-dta <- read_fst(here::here('data', 'preparedData',
-                           paste0('cases_assignedTemp', outcomeName, '.fst')))
+dta <- read_fst(here::here('data', 'prepared',
+                           paste0('cases_assignedTemp_', outcomeName, '.fst')))
 
-# 1b Bring in the daily temperature dataset 
-if(outcomeName == 'UTI'){
-  temper <- read_fst(here::here('data', 'intermediateData', 'daily_weather.fst')) 
-}
-if(outcomeName == 'fake'){
-  temper <- read_fst(here::here('data', 'intermediateData', 'fake_weather.fst')) 
-}
+# 1b Generate set of observed temperatures
+tempObs <- dta %>% 
+  group_by(adate, fips) %>% 
+  summarize(temp = mean(tLag00))
 
 ####***********************
 #### 2: Fit Main Model ####
@@ -70,17 +66,15 @@ if(outcomeName == 'fake'){
 # you don't need to consider alternative constraints for that dimension
 
 candidateConstraintsGrid <- expand_grid(
-  ERConstraint = c('lin', '3dfevenknots','4dfevenknots', '5dfevenknots'),
-  LRConstraint = c( '3dflogknots', '4dflogknots'))
+  ERConstraint = c('3dfEvenKnots','4dfEvenKnots', '5dfEvenKnots'),
+  LRConstraint = c('3dfLogKnots', '4dfLogKnots'))
 
 # 2b Perform grid search to identify optional constraints
 # when we run these models, we do not save the results; only their AIC/QAIC
-perform_gridSearch(candidateConstraintsGrid, 'Main', 'FullSet', 'FullSet')
+performGridSearch(candidateConstraintsGrid, 'main', 'fullSet', 'fullSet')
   
 # 2c Get estimates from model with selected constraints
-identifySelectedConstraints_fitModel('Main', 'FullSet', 'FullSet')
+identifySelectedConstraintsFitModel('main', 'fullSet', 'fullSet')
 
 # 2d Tell the analyst that the script is done
-cat('completed c_01 at ', paste(Sys.time()), 
-    '\n total time: ', round((Sys.time() - StartTime_c_01), 1), ' min\n')
-rm(StartTime_c_01)
+toc()

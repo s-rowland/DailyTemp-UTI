@@ -30,18 +30,18 @@
 ####*******************************************************************
 
 # 1a Begin function  
-identifySelectedConstraints_fitModel <- function(Sensitivity, SubSetVar, SubSet){
-  # Sensitivity <- 'Main'; SubSetVar <- 'FullSet'; Subset <- 'FullSet'
+identifySelectedConstraintsFitModel <- function(sensitivity, subSetVar, subSet){
+  # sensitivity <- 'main'; subsetVar <- 'season'; subset <- 'sum'
   
   # 1b Read all of the selected models 
   # and keep only the selected constraints for the model of interest
-  SelectedModel <- read_csv(here::here(outPath, 'tables',
-                                       'SelectedModels.csv')) %>% 
-    filter(Sensitivity == !!Sensitivity & 
-             SubSetVar == !!SubSetVar & SubSetVar == !!SubSetVar)
+  selectedConstraints <- read_csv(here::here(outPath, 'tables',
+                                       'selected_constraints.csv')) %>% 
+    filter(sensitivity == !!sensitivity & 
+             subSetVar == !!subSetVar & subSet == !!subSet)
   
   # 1c Fit and store selected model
-  analyze_dlnmTemp(Sensitivity, SubSetVar, SubSet,
-                SelectedModel$ERConstraint[1], SelectedModel$LRConstraint[1], 
-                'SaveModel')
+  analyzeTempDLNM(sensitivity, subSetVar, subSet,
+                selectedConstraints$ERConstraint[1], selectedConstraints$LRConstraint[1], 
+                'saveModel')
 }

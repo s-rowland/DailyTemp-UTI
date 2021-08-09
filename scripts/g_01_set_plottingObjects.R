@@ -29,8 +29,7 @@
 # 0a Create the folder structure, if you haven't already
 if (!exists('ran_0_01')){
   here::i_am('README.md')
-  source(here::here('scripts',
-                    '0_01_setUp_for_Analysis.R'))
+  source(here::here('scripts','0_01_setUp_for_analysis.R'))
 }
 
 # 0b Add marker 
@@ -42,13 +41,13 @@ ran_g_01 <- 'ran_g_01'
 
 # 1a Set common plot dimensions 
 # not all figures are this size, but these are common sizes 
-HH.fig <- 1000 
-WW.fig <- 1000 
-RR.fig <- 150
+hh.fig <- 1000 
+ww.fig <- 1000 
+rr.fig <- 150
 
-HH.efig <- 600 
-WW.efig <- 600 
-RR.efig <- 200
+hh.efig <- 600 
+ww.efig <- 600 
+rr.efig <- 200
 
 # 1b Create plotting theme 
 # this winds up not being used because some of the figures contain multiple 
@@ -71,17 +70,17 @@ col.modB <- 'darkorchid1'
 # by setting the colors here, we can ensure consistent coloring scheme across 
 # the manuscript
 # if we do any subsetting, we can include those colors in this array
-ColorArray <- list(
-  Lag = terrain.colors(7),
-  TempContrast = c(col.cold, col.hot),
-  ModContrast = c(col.modA, col.modB)
+colorArray <- list(
+  lag = terrain.colors(7),
+  tempContrast = c(col.cold, col.hot),
+  modContrast = c(col.modA, col.modB)
 )
 
 # 1e Set order of sensitivity analyses
-NameArray <- list(
-  SensitivityCode = c('Main', 'RHnoAdj', 'RHdlnm', 'altConstraints',  '24LagHr', '48LagHr'),
-  SensitivityManu = c('Main', 'No RH Adjustment','DLNM for RH', 'Alternative Constraints',
-                      '24 Lag Hours', '48 Lag Hours')
+nameArray <- list(
+  sensitivityCode = c('Mmin', 'RHnoAdj', 'RHdlnm', 'altConstraints',  '14LagDays'),
+  sensitivityManu = c('Main', 'No RH Adjustment','DLNM for RH', 'Alternative Constraints',
+                      '14 Lag Hours')
 )
 
 # 1f Create plotting theme 
@@ -96,13 +95,25 @@ tema <-   theme_classic() +
 #### 2: Read Tables Required for Plotting ####
 ####******************************************
 
-# 2a Read exposure data 
-if(outcomeName == 'UTI'){
-  temper <- read_fst(here::here('data', 'intermediateData', 'daily_weather.fst')) 
-}
-if(outcomeName == 'fake'){
-  temper <- read_fst(here::here('data', 'intermediateData', 'fake_weather.fst')) 
-}
-# 2b Read selected models table 
-SelectedModels <- read_csv(here::here(outPath, 'tables',
-                                      'SelectedModels.csv'))
+# 2a Read case-temperature data set
+dta <- read_fst(here::here('data', 'prepared',
+                           paste0('cases_assignedTemp_', outcomeName, '.fst')))
+dta <- dta %>% 
+  mutate(MM = month(adate)) %>% 
+  mutate(season = case_when(
+    MM %in% c(12, 1, 2) ~'win', 
+    MM %in% c(3, 4, 5) ~'spr', 
+    MM %in% c(6, 7, 8) ~'sum', 
+    MM %in% c(9, 10, 11) ~'fal'))
+
+# 2b Make temperature dataset
+tempObs <- dta %>% 
+  group_by(adate, fips, sutter_county, season) %>% 
+  summarize(temp = mean(tLag00))
+#tempSeq <- tempSeq$temp
+
+# 2c Read selected models table 
+selectedConstraints <- read_csv(here::here(outPath, 'tables',
+                                      'selected_constraints.csv'))
+
+

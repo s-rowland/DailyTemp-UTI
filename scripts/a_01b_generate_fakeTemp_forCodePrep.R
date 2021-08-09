@@ -27,7 +27,7 @@
 # 0a Create the folder structure, if you haven't already
 if (!exists('ran_0_01')){
   here::i_am('README.md')
-  source(here::here('scripts', '0_01_setUp_for_Analysis.R'))
+  source(here::here('scripts', '0_01_setUp_for_analysis.R'))
 }
 
 ####*************************************
@@ -35,14 +35,14 @@ if (!exists('ran_0_01')){
 ####*************************************
 
 # 1a Set number of years of fake data 
-NDays <- 365 + 366 + 365
+nDays <- 365 + 366 + 365
 
 # 1b Create a vector of fips Codes
 activefips <- c(6001, 6003, 6005, 6006, 6007, 6008, 6009)
 
 # 1c Begin dataset with Index variable
 temper <- expand_grid(
-  dIndex = c(1:NDays),
+  dIndex = c(1:nDays),
   fips = activefips)
 
 # 1d Create date variable

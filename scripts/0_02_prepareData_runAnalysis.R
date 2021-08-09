@@ -24,15 +24,14 @@
 #### 0: Preparation #### 
 ####********************
 
-# 0a Tell the analyst that the analysis is beginning 
-StartTime_0_02 <- Sys.time()
-print(paste('begin 0_02 at', StartTime_0_02))
-
-# 0b Create the folder structure, load packages, etc, if you haven't already
+# 0a Create the folder structure, load packages, etc, if you haven't already
 if (!exists('ran_0_01')){
   here::i_am('README.md')
-  source(here::here('scripts', '0_01_setUp_for_Analysis.R'))
+  source(here::here('scripts', '0_01_setUp_for_analysis.R'))
 }
+
+# 0b Begin timer
+tic('Analysis and plotting completed.')
 
 ####*********************
 #### 1: Prepare Data #### 
@@ -65,9 +64,9 @@ source(here::here('scripts', 'c_02_fit_EMMmodels.R'))
 source(here::here('scripts', 'd_01_fit_sensitivityAnalyses.R'))
 
 # 2c Conduct exploratory analyses
-source(here::here('scripts', 'e_02_fit_singleLagModels.R'))
-source(here::here('scripts', 'e_03_fit_unconstrainedDLNM.R'))
-source(here::here('scripts', 'e_04_fit_sensitivityAnalyses_setConstraints.R'))
+#source(here::here('scripts', 'e_02_fit_singleLagModels.R'))
+#source(here::here('scripts', 'e_03_fit_unconstrainedDLNM.R'))
+#source(here::here('scripts', 'e_04_fit_sensitivityAnalyses_setConstraints.R'))
 
 ####************************
 #### 3: Present Results #### 
@@ -83,7 +82,4 @@ source(here::here('scripts', 'g_06_plot_ERCurve_perLag_2Mods.R'))
 source(here::here('scripts', 'g_07_plot_LRCurve_perExposure_2Mods.R'))
 
 # 3b Tell the analyst that the analysis is done
-cat('completed 0_02 at ', paste(Sys.time()), 
-    '\n total time: ', round((Sys.time() - StartTime_0_02), 1), ' min \n')
-
-rm(StartTime_0_02)
+toc()

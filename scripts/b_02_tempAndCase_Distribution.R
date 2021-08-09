@@ -29,67 +29,59 @@
 #### 0: Preparation #### 
 ####********************
 
-# 0a Tell the analyst that the script is beginning 
-StartTime_c_01 <- Sys.time()
-print(paste('begin c_01 at', StartTime_c_01))
-
-# 0b Create the folder structure, if you haven't already
+# 0a Create the folder structure, if you haven't already
 if (!exists('ran_0_01')){
   here::i_am('README.md')
-  source(here::here('scripts', '0_01_setUp_for_Analysis.R'))
+  source(here::here('scripts', '0_01_setUp_for_analysis.R'))
 }
 
 ####******************
 #### 1: Read Data ####
 ####******************
 
-# 1a Bring in the daily temperature dataset 
-if(user == 'Analyst') {temper <- read_fst(here::here('data', 'intermediateData',
-                              'daily_weather.fst')) }
+# 1a Read outcome data 
+cases <- read_fst(here::here('data', 'prepared',
+                           paste0('cases_assignedTemp_', outcomeName, '.fst')))
 
-if(user == 'Reviewer') {temper <- read_fst(here::here('data', 'intermediateData',
-                                                     'fake_weather.fst')) }
+# 1b Generate set of observed temperatures
+tempObs <- cases %>% 
+  group_by(adate, fips) %>% 
+  summarize(temp = mean(tLag00))
 
-# 1b Bring in climate region dataset 
-clim <- read_csv(here::here('data', 'rawData', 
+# 1c Bring in climate region dataset 
+clim <- read_csv(here::here('data', 'from_adjacent_project', 
                             'noaa_clim_div.csv')) %>% 
-  rename(fips = FIPS, ClimateRegion = NAME)
+  rename(fips = FIPS, climate_region = clim_div, county_name = NAME) %>% 
+  mutate(climate_region = as.character(climate_region))
 
-# 1c Combine 
-dta <- inner_join(temper, clim, by = 'fips')
-
-# 1d Read outcome data 
-cases <- read_fst(here::here('data', 'preparedData',
-                           paste0('cases_assignedTemp', outcomeName, '.fst')))
-# 1e Combine 
+# 1d Combine 
 cases <- inner_join(cases, clim, by = 'fips')
-
+tempObs <- inner_join(tempObs, clim, by = 'fips')
 
 ####**************************************
 #### 2: Plot Temperature Distribution ####
 ####**************************************
 
-
-ggplot(dta) + 
-  geom_violin(aes(x=ClimateRegion, y =tmean, color = ClimateRegion)) + 
+ggplot(tempObs) + 
+  geom_violin(aes(x=climate_region, y =temp, color = climate_region)) + 
   labs(x='Climate Region')
 
-dta.grp <- dta %>% 
-  group_by(fips, ClimateRegion) %>%
-  summarize(fipsMeanT =mean(tmean)) %>% 
-  arrange(fipsMeanT)
+tempObs.grp <- tempObs %>% 
+  group_by(fips, climate_region) %>%
+  summarize(fips_mean_temp = mean(temp)) %>% 
+  arrange(fips_mean_temp)
 
-dta.grp <- dta.grp %>% 
-  mutate(fips_factor = factor(fips, dta.grp$fips))
-dta <- dta %>%
-  mutate(fips_factor = factor(fips, dta.grp$fips))
+tempObs.grp <- tempObs.grp %>% 
+  mutate(fips_factor = factor(fips, tempObs.grp$fips))
+tempObs <- tempObs %>%
+  mutate(fips_factor = factor(fips, tempObs.grp$fips))
 
-ggplot(dta) + 
-  geom_violin(aes(x=fips_factor, y =tmean, color = ClimateRegion, fill=ClimateRegion)) + 
+ggplot(tempObs) + 
+  geom_violin(aes(x=fips_factor, y =temp, color = climate_region, fill=climate_region)) + 
   labs(x='FIPS')
 
-ggplot(dta.grp) + 
-  geom_point(aes(x=fips_factor, y =fipsMeanT, color = ClimateRegion, fill=ClimateRegion)) + 
+ggplot(tempObs.grp) + 
+  geom_point(aes(x=fips_factor, y =fips_mean_temp, color = climate_region, fill=climate_region)) + 
   labs(x='FIPS', y = 'FIPS Average Temp')
 
 
@@ -97,25 +89,64 @@ ggplot(dta.grp) +
 #### 3: Plot Case Distribution ####
 ####*******************************
 
+ggplot(cases) + 
+  geom_violin(aes(x=climate_region, y =case_count, color = climate_region)) + 
+  labs(x='Climate Region')  
 
-ggplot(dta) + 
-  geom_violin(aes(x=ClimateRegion, y =case_count, color = ClimateRegion)) + 
-  labs(x='Climate Region')
+cases.grp <- cases %>% 
+  group_by(fips, climate_region, county_name) %>%
+  summarize(fips_mean_cases =mean(case_count)) %>% 
+  arrange(fips_mean_cases)
 
-dta.grp <- dta %>% 
-  group_by(fips, ClimateRegion) %>%
-  summarize(fipsMeanCases =mean(case_count)) %>% 
-  arrange(fipsMeanCases)
+cases.grp <- cases.grp %>% 
+  mutate(fips_factor = factor(fips, cases.grp$fips))
+cases <- cases %>%
+  mutate(fips_factor = factor(fips, cases.grp$fips))
 
-dta.grp <- dta.grp %>% 
-  mutate(fips_factor = factor(fips, dta.grp$fips))
-dta <- dta %>%
-  mutate(fips_factor = factor(fips, dta.grp$fips))
-
-ggplot(dta) + 
-  geom_violin(aes(x=fips_factor, y =case_count, color = ClimateRegion, fill=ClimateRegion)) + 
+ggplot(cases) + 
+  geom_violin(aes(x=fips_factor, y =case_count, color = climate_region, fill=climate_region)) + 
   labs(x='FIPS')
 
-ggplot(dta.grp) + 
-  geom_point(aes(x=fips_factor, y =fipsMeanCases, color = ClimateRegion, fill=ClimateRegion)) + 
+ggplot(cases.grp) + 
+  geom_point(aes(x=fips_factor, y =fips_mean_cases, color = climate_region, fill=climate_region)) + 
   labs(x='FIPS', y = 'FIPS Average Number of Cases')
+
+
+ggplot(cases.grp) + 
+  geom_point(aes(x=fips_factor, y =fips_mean_cases, 
+                 color = county_name, fill=county_name)) + 
+  labs(x='FIPS', y = 'FIPS Average Number of Cases') + 
+  scale_color_manual(values=c(as.vector(pals::stepped(24)), 
+                       as.vector(pals::stepped2(12))))
+
+
+####*******************************************
+#### 4: Plot Case Distribution by Week/End ####
+####*******************************************
+
+# 4a Create Weekend variable 
+cases <- cases %>% 
+  mutate(ADMDateTime = parse_date_time(adate, 'ymd', tz = 'America/Los_Angeles')) %>%
+  mutate(MM = month(ADMDateTime), 
+       DoW = wday(ADMDateTime)) %>% 
+  mutate(season = case_when(
+    MM %in% c(12, 1, 2) ~'win', 
+    MM %in% c(3, 4, 5) ~'spr', 
+    MM %in% c(6, 7, 8) ~'sum', 
+    MM %in% c(9, 10, 11) ~'fal'), 
+    dow = case_when(
+      DoW %in% c(1:5) ~ 'weekday', 
+      DoW %in% c(6, 7) ~ 'weekend')) %>% 
+  dplyr::select(-MM, DoW)
+
+ggplot(cases) + 
+  geom_violin(aes(x=dow, y =case_count, color = dow)) + 
+  labs(x='Week/Weekend')
+
+cases %>% 
+  mutate(LA = if_else(fips == 6037, 'LA', 'notLA')) %>%
+  group_by(dow, LA) %>% 
+  summarize(MeanCases = mean(case_count), 
+            SDCases = sd(case_count)) %>% 
+  arrange(LA)
+

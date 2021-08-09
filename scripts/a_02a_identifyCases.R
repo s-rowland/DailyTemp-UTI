@@ -43,7 +43,7 @@ print(paste('begin a_01 at', StartTime_a_01))
 # 0b Create the folder structure, if you haven't already
 if (!exists('ran_0_01')){
   here::i_am('README.md')
-  source(here::here('scripts', '0_01_setUp_for_Analysis.R'))
+  source(here::here('scripts', '0_01_setUp_for_analysis.R'))
 }
 
 ####******************************

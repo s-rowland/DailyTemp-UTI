@@ -23,15 +23,14 @@
 #### 0: Preparation #### 
 ####********************
 
-# 0a Tell the analyst that the script is beginning 
-StartTime_c_01 <- Sys.time()
-print(paste('begin c_01 at', StartTime_c_01))
-
-# 0b Create the folder structure, if you haven't already
+# 0a Create the folder structure, if you haven't already
 if (!exists('ran_0_01')){
   here::i_am('README.md')
-  source(here::here('scripts', '0_01_setUp_for_Analysis.R'))
+  source(here::here('scripts', '0_01_setUp_for_analysis.R'))
 }
+
+# 0b Begin the timer 
+tic('sensitivity Analyses Completed')
 
 ####******************
 #### 1: Read Data ####
@@ -41,43 +40,41 @@ if (!exists('ran_0_01')){
 dta <- read_fst(here::here('data', 'preparedData',
                            paste0('cases_assignedTemp', outcomeName, '.fst')))
 
-# 1b Bring in the daily temperature dataset 
-if(outcomeName == 'UTI'){
-  temper <- read_fst(here::here('data', 'intermediateData', 'daily_weather.fst')) 
-}
-if(outcomeName == 'fake'){
-  temper <- read_fst(here::here('data', 'intermediateData', 'fake_weather.fst')) 
-}
+# 1b Generate set of observed temperatures
+tempObs <- dta %>% 
+  group_by(adate, fips) %>% 
+  summarize(temp = mean(tLag00))
+tempObs <- tempObs$temp
 
 # 1c Get the selected constraints of the main model 
-SelectedModel <- read_csv(here::here(outPath, 'tables',
-                                     'SelectedModels.csv')) %>% 
-  filter(Sensitivity == 'Main' & SubSetVar == 'FullSet' & SubSetVar == 'FullSet')
+selectedConstraints <- read_csv(here::here(outPath, 'tables',
+                                     'selected_constraints.csv')) %>% 
+  filter(sensitivity == 'main' & subSetVar == 'fullSet' & subSetVar == 'fullSet')
 
 ####**************************************
 #### 2: Fit Alternative RH Constraint ####
 ####**************************************
 
-# 2a fit no RH model
-analyze_dlnmTemp('noRH', 'FullSet', 'FullSet',
-                 SelectedModel$ERConstraint[1], SelectedModel$LRConstraint[1],
-                 'SaveModel')
-# 2b fit no RH model
-analyze_dlnmTemp('RHdlnm', 'FullSet', 'FullSet',
-                 SelectedModel$ERConstraint[1], SelectedModel$LRConstraint[1],
-                 'SaveModel')
+# 2a Fit no RH model
+analyzeTempDLNM('noRH', 'fullSet', 'fullSet',
+                 selectedConstraints$ERConstraint[1], selectedConstraints$LRConstraint[1],
+                 'saveModel')
+# 2b Fit RH DLNM model
+analyzeTempDLNM('RHdlnm', 'fullSet', 'fullSet',
+                 selectedConstraints$ERConstraint[1], selectedConstraints$LRConstraint[1],
+                 'saveModel')
 
 ## code if we want to select constraints for each sensitivity analysis ##
 # 2a.i Perform grid search to identify optional constraints
-#perform_gridSearch(candidateConstraintsGrid, 'noRH', 'FullSet', 'FullSet')
+#performGridSearch(candidateConstraintsGrid, 'noRH', 'fullSet', 'fullSet')
 # 2a.ii Get estimates from model with selected constraints
-#identifySelectedConstraints_fitModel('noRH', 'FullSet', 'FullSet')
+#identifySelectedConstraints_fitModel('noRH', 'fullSet', 'fullSet')
 
 # 2b fit RH dlnm model
 # 2b.i Perform grid search to identify optional constraints
-#perform_gridSearch(candidateConstraintsGrid, 'RHdlnm', 'FullSet', 'FullSet')
+#performGridSearch(candidateConstraintsGrid, 'RHdlnm', 'fullSet', 'fullSet')
 # 2b.ii Get estimates from model with selected constraints
-#identifySelectedConstraints_fitModel('RHdlnm', 'FullSet', 'FullSet')
+#identifySelectedConstraints_fitModel('RHdlnm', 'fullSet', 'fullSet')
 
 ####****************************
 #### 3: Fit Alternative Lag ####
@@ -85,17 +82,20 @@ analyze_dlnmTemp('RHdlnm', 'FullSet', 'FullSet',
 
 # 3a Make grid of potential parameters we will then evaluate 
 candidateConstraintsGrid <- expand_grid(
-  ERConstraint = c('lin', '3dfevenknots','4dfevenknots', '5dfevenknots'),
-  LRConstraint = c('3dflogknots', '4dflogknots'))
+  ERConstraint = c('3dfEvenKnots','4dfEvenKnots', '5dfEvenKnots'),
+  LRConstraint = c('3dfLogKnots', '4dfLogKnots'))
 
 # 3b fit 14 day Lag model
 # 3b.i Perform grid search to identify optional constraints
-perform_gridSearch(candidateConstraintsGrid, '7DayLag', 'FullSet', 'FullSet')
+#performGridSearch(candidateConstraintsGrid, '7DayLag', 'fullSet', 'fullSet')
 # 3b.ii Get estimates from model with selected constraints
-identifySelectedConstraints_fitModel('7DayLag', 'FullSet', 'FullSet')
+#identifySelectedConstraintsFitModel('7DayLag', 'fullSet', 'fullSet')
 
 # 3c fit 21 day Lag model
 # 3c.i Perform grid search to identify optional constraints
-perform_gridSearch(candidateConstraintsGrid, '21DayLag', 'FullSet', 'FullSet')
+performGridSearch(candidateConstraintsGrid, '21DayLag', 'fullSet', 'fullSet')
 # 3c.ii Get estimates from model with selected constraints
-identifySelectedConstraints_fitModel('21DayLag', 'FullSet', 'FullSet')
+identifySelectedConstraintsFitModel('21DayLag', 'fullSet', 'fullSet')
+
+# 3d Tell the analyst that you are done 
+toc()

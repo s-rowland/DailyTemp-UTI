@@ -1,5 +1,5 @@
-# Assign Exposure
-# Data Preparation
+# Assess Effect Modification by Week/end status
+# Exploratory Analayses
 # Daily Temperature-UTI Project 
 # Joan Casey & Sebastian T. Rowland
 # Updated 05/19/2021
@@ -11,9 +11,7 @@
 # N: Notes
 # 0: Preparation 
 # 1: Read Data 
-# 2: Fit Female-Only Model
-# 3: Fit Catchement Area Models
-# 4: Fit Seasonal Models
+# 2: Fit Week/Weekend Models
 
 ####**************
 #### N: Notes #### 
@@ -53,9 +51,9 @@ tempObs <- dta %>%
   summarize(temp = mean(tLag00))
 tempObs <- tempObs$temp
 
-####******************************
-#### 2: Fit Female-Only Model ####
-####******************************
+####********************************
+#### 2: Fit Week/Weekend Models ####
+####********************************
 
 # 2a Create table of potential constraints ('candidate constraints')
 # here you can decide which constraints to consider. 
@@ -74,54 +72,14 @@ candidateConstraintsGrid <- expand_grid(
 
 # 2b Perform grid search to identify optional constraints
 # when we run these models, we do not save the results; only their AIC/QAIC
-performGridSearch(candidateConstraintsGrid, 'main', 'sex', 'f')
+performGridSearch(candidateConstraintsGrid, 'explor', 'dow', 'wk')
   
 # 2c Get estimates from model with selected constraints
-identifySelectedConstraintsFitModel('main', 'sex', 'f')
+identifySelectedConstraintsFitModel('explor', 'dow', 'wk')
 
-####**********************************
-#### 3: Fit Catchement Area Models ####
-####**********************************
+# 2b Perform grid search to identify optional constraints
+# when we run these models, we do not save the results; only their AIC/QAIC
+performGridSearch(candidateConstraintsGrid, 'explor', 'dow', 'wknd')
 
-# 3a Fit Alpine-only model
-# 3a.i Perform grid search to identify optional constraints
-performGridSearch(candidateConstraintsGrid, 'main', 'sutter_county', 'sutter')
-# 3a.ii Get estimates from model with selected constraints
-identifySelectedConstraintsFitModel('main', 'sutter_county', 'sutter')
-
-# 3a Fit KPSC-only model
-# 3a.i Perform grid search to identify optional constraints
-performGridSearch(candidateConstraintsGrid, 'main', 'sutter_county', 'not_sutter')
-# 3a.ii Get estimates from model with selected constraints
-identifySelectedConstraintsFitModel('main', 'sutter_county', 'not_sutter')
-
-####****************************
-#### 4: Fit Seasonal Models ####
-####****************************
-
-# 4a fit winter-only model
-# 4a.i Perform grid search to identify optional constraints
-performGridSearch(candidateConstraintsGrid, 'main', 'season', 'win')
-# 4a.ii Get estimates from model with selected constraints
-identifySelectedConstraintsFitModel('main', 'season', 'win')
-
-# 4b fit winter-only model
-# 4b.i Perform grid search to identify optional constraints
-performGridSearch(candidateConstraintsGrid, 'main', 'season', 'spr')
-# 4b.ii Get estimates from model with selected constraints
-identifySelectedConstraintsFitModel('main', 'season', 'spr')
-
-# 4c fit winter-only model
-# 4c.i Perform grid search to identify optional constraints
-performGridSearch(candidateConstraintsGrid, 'main', 'season', 'sum')
-# 4c.ii Get estimates from model with selected constraints
-identifySelectedConstraintsFitModel('main', 'season', 'sum')
-
-# 4d fit winter-only model
-# 4d.i Perform grid search to identify optional constraints
-performGridSearch(candidateConstraintsGrid, 'main', 'season', 'fal')
-# 4d.ii Get estimates from model with selected constraints
-identifySelectedConstraintsFitModel('main', 'season', 'fal')
-
-# 4e Tell the analyst that the emm models are done
-toc()
+# 2c Get estimates from model with selected constraints
+identifySelectedConstraintsFitModel('explor', 'dow', 'wknd')

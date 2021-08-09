@@ -28,14 +28,12 @@
 # 0a Create the folder structure, if you haven't already
 if (!exists('ran_0_01')){
   here::i_am('README.md')
-  source(here::here('scripts',
-                    '0_01_setUp_for_Analysis.R'))
+  source(here::here('scripts','0_01_setUp_for_analysis.R'))
 }
 
 # 0b Create the plotting objects, if you haven't already
 if (!exists('ran_g_01')){
-  source(here::here('HourlyTemp_Stroke', 'Scripts', 
-                    'G_01_set_PlottingObjects.R'))
+  source(here::here('scripts', 'G_01_set_plottingObjects.R'))
 }
 
 ####***************************

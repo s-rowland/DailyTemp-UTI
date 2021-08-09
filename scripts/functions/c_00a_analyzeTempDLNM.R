@@ -32,8 +32,8 @@
 # The code outputs a) the model, b) estimate for the mean to 10th and 90th percentile 
 # c) for penalized spline models only, an ER plot.
 
-# Nb ModelName 
-# A critical object in this project is the ModelName 
+# Nb modelName 
+# A critical object in this project is the modelName 
 # This identifiers provides all the unique information about a model 
 # When you look a file name, you know exactly what the model is about
 
@@ -46,22 +46,25 @@
 ####***********************
 
 # 1a Name function
-analyze_dlnmTemp <- function(Sensitivity, SubSetVar, SubSet,
-                             ERConstraint, LRConstraint, SaveModel){
+analyzeTempDLNM <- function(sensitivity, subSetVar, subSet,
+                             ERConstraint, LRConstraint, saveModel){
    
-  #Sensitivity <- 'Main'; 
-   #ERConstraint <- '3dfevenknots'; LRConstraint <- '3dflogknots';
-   #SubSetVar <- 'FullSet'; SubSet <- 'FullSet';  SaveModel <- 'SaveAIC'
+  #sensitivity <- 'main'; 
+   #ERConstraint <- '3dfEvenKnots'; LRConstraint <- '3dfLogKnots';
+   #subSetVar <- 'fullSet'; subSet <- 'fullSet';  saveModel <- 'saveAIC'
   
+  #sensitivity <- 'explor'; 
+  #ERConstraint <- '3dfEvenKnots'; LRConstraint <- '3dfLogKnots';
+  #subSetVar <- 'wknd'; subSet <- 'wknd';  saveModel <- 'saveAIC'
   
-# set this instead to test subsetting by a patient characteristic
-  # SubSetVar <- 'sex'; SubSet <- 'f';  SaveModel <- 'SaveAIC'
+# set this instead to test subSetting by a patient characteristic
+  # subSetVar <- 'sex'; subSet <- 'f';  saveModel <- 'saveAIC'
   
-  # set this instead to test subsetting by a time-varying characteristic
-  # SubSetVar <- 'Season'; SubSet <- 'Summer';  SaveModel <- 'SaveAIC'
+  # set this instead to test subSetting by a time-varying characteristic
+  # subSetVar <- 'season'; subSet <- 'sum';  saveModel <- 'saveAIC'
   
-  # 1b Create ModelName 
-  ModelName <- paste(Sensitivity, SubSetVar, SubSet, 
+  # 1b Create modelName 
+  modelName <- paste(sensitivity, subSetVar, subSet, 
                      ERConstraint, LRConstraint, sep = '_')
   
   ####**************************
@@ -78,16 +81,21 @@ analyze_dlnmTemp <- function(Sensitivity, SubSetVar, SubSet,
   # Here I am making random variables for testing
   minDateTime = min(dta$ADMDateTime)
   dta <- dta %>% 
-    mutate(DayIndex = as.numeric(ADMDateTime - minDateTime, 'days'))
+    mutate(day_index = as.numeric(ADMDateTime - minDateTime, 'days'))
   
   # Variables for testing subsetting
   dta <- dta %>% 
-    mutate(MM = month(ADMDateTime)) %>% 
+    mutate(MM = month(ADMDateTime), 
+           DoW = wday(ADMDateTime)) %>% 
     mutate(season = case_when(
       MM %in% c(12, 1, 2) ~'win', 
       MM %in% c(3, 4, 5) ~'spr', 
       MM %in% c(6, 7, 8) ~'sum', 
-      MM %in% c(9, 10, 11) ~'fal'))
+      MM %in% c(9, 10, 11) ~'fal'), 
+      dow = case_when(
+        DoW %in% c(1:5) ~ 'wk', 
+        DoW %in% c(6, 7) ~ 'wknd')) %>% 
+    dplyr::select(-MM, DoW)
   
   ####****************************************************************
   #### 3: Ascertain Cases and Stratify by Patient Characteristics ####
@@ -100,21 +108,27 @@ analyze_dlnmTemp <- function(Sensitivity, SubSetVar, SubSet,
   # so in this section we just set the outcome_count variable to whatever column 
   # we can to use 
   
-  # note that we can also use this section to do subsetting by patient 
+  # note that we can also use this section to do subSetting by patient 
   # characteristics, for example, we could have a column of counts for UTI from 
   # subjects over 65, and a column of counts for subjects under 65. 
-  # for such subsetting, I think it would be better to keep the sensitivity 
-  # as 'main' and instead vary the SubSet parameters 
+  # for such subSetting, I think it would be better to keep the sensitivity 
+  # as 'main' and instead vary the subSet parameters 
   # so that the sensitivity term only distinguishes the main results 
   # from sensitivity results. 
   
-  # we would also need to add any other temporal or spatial subsets to the 
+  # we would also need to add any other temporal or spatial subSets to the 
   # if statement
-  if(SubSetVar %in% c('FullSet', 'season', 'climateRegion')){
+  if(subSetVar %in% c('fullSet', 'season', 'sutter_county', 'dow')){
     dta <- dta %>% mutate(outcome_count = case_count)
     } else {
-    countVar = paste0('case_count_', SubSetVar, '_', SubSet)
+    countVar = paste0('case_count_', subSetVar, '_', subSet)
     dta$outcome_count <- dta[, countVar]
+  }
+  # specical female-only sensitivity analyses so that we can examine the effect 
+  # of restricting to females when doing effect modification
+  if(sensitivity == 'onlyF'){
+    dta <- dta %>% 
+      mutate(outcome_count = case_count_sex_f)
   }
   
   ####******************************************************
@@ -122,18 +136,18 @@ analyze_dlnmTemp <- function(Sensitivity, SubSetVar, SubSet,
   ####******************************************************
 
   # 4a Apply any stratification by time-varying or spatially-varying factors
-  # in this section, we first rename the column for that subsetting variable 
-  # to SUBSETVAR 
+  # in this section, we first rename the column for that subSetting variable 
+  # to subSetVar 
   # we then apply a filter to only keep observations that match the particular 
-  # subset we are interested in. 
+  # subSet we are interested in. 
   
-  # Right now it is set up to only subset for the season variable 
+  # Right now it is set up to only subSet for the season variable 
   # if we create such a variable 
   # if we want to add other variable, we can just add them to the if statement
-  if(SubSetVar == 'season' | SubSetVar == 'climateRegion'){
+  if(subSetVar == 'season' | subSetVar == 'sutter_county' | subSetVar == 'dow'){
     dta <- dta %>% 
-      rename(SUBSETVAR = !!SubSetVar) %>%
-      filter(SUBSETVAR == SubSet)
+      rename(subSetVar = !!subSetVar) %>%
+      filter(subSetVar == subSet)
   }
   
   ####**************************
@@ -148,10 +162,8 @@ analyze_dlnmTemp <- function(Sensitivity, SubSetVar, SubSet,
     arrange(matchID)
   
   # 5b Set the number of lags based on the sensitivity 
-  if(!str_detect(Sensitivity, 'DayLag')){numLag <- 14
-  }else {
-    numLag <- as.numeric(str_remove_all(Sensitivity, '[A-z]'))
-    }
+  if(!str_detect(sensitivity, 'DayLag')){numLag <- 14
+  }else {numLag <- as.numeric(str_remove_all(sensitivity, '[A-z]'))}
   
   # 5c Set ER and LR constraints
   # we remove all of the letters from the  parameter, leaving just the number of df
@@ -163,44 +175,44 @@ analyze_dlnmTemp <- function(Sensitivity, SubSetVar, SubSet,
   
   # 5e Create crossbasis
   # Here I include more options than I use in the main model 
-  if(str_detect(ERConstraint, 'lin') & str_detect(LRConstraint, 'evenknots')){
+  if(str_detect(ERConstraint, 'lin') & str_detect(LRConstraint, 'EvenKnots')){
     cb.temp <- crossbasis(
       exposure_profiles, 
       lag=c(0,(numLag-1)), # we subtract 1 because lags start at 0
       argvar=list(fun='lin'),
       arglag=list(fun='ns', df = LRdf))}
-  if(str_detect(ERConstraint, 'evenknots') & str_detect(LRConstraint, 'evenknots')){
+  if(str_detect(ERConstraint, 'EvenKnots') & str_detect(LRConstraint, 'EvenKnots')){
     cb.temp <- crossbasis(
       exposure_profiles,
       lag=c(0,(numLag-1)),
       argvar=list(fun='ns', df = ERdf),
       arglag=list(fun='ns', df = LRdf))}
-  if(str_detect(ERConstraint, 'evenknots') & str_detect(LRConstraint, 'logknots')){
+  if(str_detect(ERConstraint, 'EvenKnots') & str_detect(LRConstraint, 'LogKnots')){
     lagKnots <- logknots(numLag-1, fun = 'ns', df = LRdf)
     cb.temp <- crossbasis(
       exposure_profiles,
       lag=c(0,(numLag-1)),
       argvar=list(fun='ns', df = ERdf),
       arglag=list(knots=lagKnots))}
-  if(str_detect(ERConstraint, 'lin') & str_detect(LRConstraint, 'logknots')){
+  if(str_detect(ERConstraint, 'lin') & str_detect(LRConstraint, 'LogKnots')){
     lagKnots <- logknots(numLag-1, fun = 'ns', df = LRdf)
     cb.temp <- crossbasis(
       exposure_profiles,
       lag=c(0,(numLag-1)),
       argvar=list(fun='lin'),
       arglag=list(knots=lagKnots))}
+  if(str_detect(ERConstraint, 'psp') & !str_detect(LRConstraint, 'psp')){
+    cb.temp <- crossbasis(
+      exposure_profiles,
+      lag=c(0,(numLag-1)),
+      argvar=list(fun='ps', df =9),
+      arglag=list(fun='ns', df = LRdf))}
   if(!str_detect(ERConstraint, 'psp') & str_detect(LRConstraint, 'psp')){
     cb.temp <- crossbasis(
       exposure_profiles,
       lag=c(0,(numLag-1)),
       argvar=list(fun='ns', df = ERdf),
       arglag=list(fun='ps'))}
-  if(str_detect(ERConstraint, 'psp') & !str_detect(LRConstraint, 'psp')){
-    cb.temp <- crossbasis(
-      exposure_profiles,
-      lag=c(0,(numLag-1)),
-      argvar=list(fun='ps'),
-      arglag=list(fun='ns', df = LRdf))}
   
   ####*************************
   #### 6: Fit Health Model ####
@@ -209,20 +221,21 @@ analyze_dlnmTemp <- function(Sensitivity, SubSetVar, SubSet,
   # 6a Fit Main Model
   # note that we can change the distribution family to poisson if the dispersion 
   # factor is 1.
-  mod <- gnm(outcome_count ~ cb.temp + meanRH, 
+      mod <- gnm(outcome_count ~ cb.temp + meanRH, 
              family = quasipoisson(link= 'log'), 
              data = dta, 
-             eliminate = matchID) # eliminate is the matching variable
-
+             eliminate = matchID)# eliminate is the matching variable
+ 
+  
   # 6b Fit alternative models
   # this is just an example to show what it would look like. 
-  if(Sensitivity == 'noRH'){
+  if(sensitivity == 'noRH'){
     mod <- gnm(outcome_count ~ cb.temp, 
                family = quasipoisson(link= 'log'), 
                data = dta, 
                eliminate = matchID) 
   }
-  if(Sensitivity == 'RHdlnm'){
+  if(sensitivity == 'RHdlnm'){
     cb.rh <- crossbasis(
       as.matrix(dplyr::select(dta, contains('rLag')))[,1:numLag], 
       lag=c(0,(numLag-1)),
@@ -244,7 +257,7 @@ analyze_dlnmTemp <- function(Sensitivity, SubSetVar, SubSet,
   
   # 7A.a Begin option
   # when we do the grid search, we want to just save the model's AIC and not its results
-  if(SaveModel == 'SaveAIC'){
+  if(saveModel == 'saveAIC'){
     
     # 7A.b Readin the table of AIC's
     aic.table <- read_csv(here::here(outPath, 'tables', 
@@ -268,17 +281,17 @@ analyze_dlnmTemp <- function(Sensitivity, SubSetVar, SubSet,
     #with(object,sum((weights * residuals^2)[weights > 0])/df.residual)
     
     # 7A.d Add this aic to the set of AIC's
-    aic.table[1+nrow(aic.table),] <- list(Sensitivity, SubSetVar, SubSet,
+    aic.table[1+nrow(aic.table),] <- list(sensitivity, subSetVar, subSet,
                                           ERConstraint, LRConstraint, qaic.mod,
                                           NA, Sys.time())
     
     # 7A.e Remove any old AICs and then save
     # at the slice step you keep only the earliest AIC for each model-constraint combo
     aic.table %>% 
-      group_by(Sensitivity, SubSetVar, SubSet,ERConstraint, LRConstraint) %>% 
-      arrange(desc(RunDate)) %>% 
+      group_by(sensitivity, subSetVar, subSet,ERConstraint, LRConstraint) %>% 
+      arrange(desc(run_date)) %>% 
       slice(0:1) %>% 
-      filter(!is.na(Sensitivity)) %>%
+      filter(!is.na(sensitivity)) %>%
       write_csv(here::here(outPath, 'tables',
                            'Model_AIC.csv'))
   }
@@ -293,31 +306,34 @@ analyze_dlnmTemp <- function(Sensitivity, SubSetVar, SubSet,
   # final model estimation
   
   # 7B.a Begin option  
-  if(SaveModel == 'SaveModel'){
+  if(saveModel == 'saveModel'){
     
     # 7B.b Save the model 
     mod %>% saveRDS(here::here(outPath, 'models',
-                               paste0(ModelName, '.RDS')))
+                               paste0(modelName, '.RDS')))
 
     # 7B.c Create set of counterfactual exposures for comparison 
     # with crosspred, we specify the reference level and the counterfactual 
     # exposure levels 
     # we use the Label variable to track these exposure levels later on
+    # create set of temperatures
+    
     expContrasts <- data.frame(  
-      CounterfactualTemp = c(seq(min(temper$tmean), max(temper$tmean), length.out = 100), 
-                             quantile(temper$tmean, 0.01, type = 1), quantile(temper$tmean, 0.99, type = 1), 
-                             quantile(temper$tmean, 0.05, type = 1), quantile(temper$tmean, 0.95, type = 1), 
-                             quantile(temper$tmean, 0.10, type = 1), quantile(temper$tmean, 0.90, type = 1),  
-                             quantile(temper$tmean, 0.15, type = 1), quantile(temper$tmean, 0.85, type = 1),
-                             quantile(temper$tmean, 0.20, type = 1), quantile(temper$tmean, 0.80, type = 1), 
-                             quantile(temper$tmean, 0.25, type = 1), quantile(temper$tmean, 0.75, type = 1), 
-                             mean(temper$tmean) - sd(temper$tmean), 
-                             mean(temper$tmean) + sd(temper$tmean), 
-                             mean(temper$tmean) - 10,  mean(temper$tmean) + 10),
-      Label = c(rep('ERValues', 100), 'per01','per99', 'per05', 'per95', 'per10', 'per90',
+      counterfactual_temp = c(seq(min(tempObs$temp), max(tempObs$temp), length.out = 100), 
+                              mean(tempObs$temp),
+                             quantile(tempObs$temp, 0.01, type = 1), quantile(tempObs$temp, 0.99, type = 1), 
+                             quantile(tempObs$temp, 0.05, type = 1), quantile(tempObs$temp, 0.95, type = 1), 
+                             quantile(tempObs$temp, 0.10, type = 1), quantile(tempObs$temp, 0.90, type = 1),  
+                             quantile(tempObs$temp, 0.15, type = 1), quantile(tempObs$temp, 0.85, type = 1),
+                             quantile(tempObs$temp, 0.20, type = 1), quantile(tempObs$temp, 0.80, type = 1), 
+                             quantile(tempObs$temp, 0.25, type = 1), quantile(tempObs$temp, 0.75, type = 1),
+                             mean(tempObs$temp) - sd(tempObs$temp), 
+                             mean(tempObs$temp) + sd(tempObs$temp), 
+                             mean(tempObs$temp) - 10,  mean(tempObs$temp) + 10),
+      label = c(rep('ERValues', 100), 'mean', 'per01','per99', 'per05', 'per95', 'per10', 'per90',
                 'per15', 'per85', 'per20', 'per80', 'per25', 'per75', 'MeanMinusSD', 'MeanPlusSD', 
                 'MeanMinus10', 'MeanPlus10')) %>% 
-      mutate(CounterfactualTemp = round(CounterfactualTemp, 7))
+      mutate(counterfactual_temp = round(counterfactual_temp, 7))
     
     # 7B.d Generate estimates
     # the cen argument sets the reference exposure level for our effect estimates
@@ -329,8 +345,8 @@ analyze_dlnmTemp <- function(Sensitivity, SubSetVar, SubSet,
     
     est <- crosspred(basis = cb.temp,
                       model = mod,
-                      cen = mean(temper$tmean),
-                      at = expContrasts$CounterfactualTemp, 
+                      cen = mean(tempObs), #quantile(tempObs, 0.90, type = 1),
+                      at = expContrasts$counterfactual_temp, 
                       cumul=TRUE, 
                       bylag=0.2)
   
@@ -338,7 +354,7 @@ analyze_dlnmTemp <- function(Sensitivity, SubSetVar, SubSet,
     fit.table <- as.data.frame(est$matRRfit)  
     colnames(fit.table) <- paste0('fit.rr.', colnames(fit.table))
     fit.table <- fit.table %>%  
-      mutate(CounterfactualTemp = as.numeric(row.names(fit.table)))
+      mutate(counterfactual_temp = as.numeric(row.names(fit.table)))
 
     lci.table <- as.data.frame(est$matRRlow)  
     colnames(lci.table) <- paste0('lci.rr.', colnames(lci.table))
@@ -351,12 +367,12 @@ analyze_dlnmTemp <- function(Sensitivity, SubSetVar, SubSet,
     est.table <- bind_cols(fit.table, lci.table, uci.table)
     
     # 7B.g Attach the labels of the exposure contrasts
-    est.table <- est.table %>% full_join(expContrasts, by = 'CounterfactualTemp')
+    est.table <- est.table %>% full_join(expContrasts, by = 'counterfactual_temp')
     
     # 7B.h Save estimate table for individual lags 
     est.table %>%
       write.csv(here::here(outPath, 'estimates', 
-                                       paste0('EstInd_', ModelName, '.csv')))
+                                       paste0('EstInd_', modelName, '.csv')))
     
     # 7B.i Extract cumulative coefficient fit and ci 
     # the cumulative coefficients represent the relative risk for a day 
@@ -365,7 +381,7 @@ analyze_dlnmTemp <- function(Sensitivity, SubSetVar, SubSet,
     fit.table <- as.data.frame(est$cumRRfit)  
     colnames(fit.table) <- paste0('fit.rr.', colnames(fit.table))
     fit.table <- fit.table %>%  
-      mutate(CounterfactualTemp = as.numeric(row.names(fit.table)))
+      mutate(counterfactual_temp = as.numeric(row.names(fit.table)))
     
     lci.table <- as.data.frame(est$cumRRlow)  
     colnames(lci.table) <- paste0('lci.rr.', colnames(lci.table))
@@ -378,12 +394,12 @@ analyze_dlnmTemp <- function(Sensitivity, SubSetVar, SubSet,
     est.table <- bind_cols(fit.table, lci.table, uci.table)
     
     # 7B.k Attach the labels of the exposure contrasts
-    est.table <- est.table %>% full_join(expContrasts, by = 'CounterfactualTemp')
+    est.table <- est.table %>% full_join(expContrasts, by = 'counterfactual_temp')
     
     # 7B.l Save cumulative estimates table 
     est.table %>% 
       write.csv(here::here(outPath, 'estimates',
-                           paste0('EstCumul_', ModelName, '.csv')))
+                           paste0('EstCumul_', modelName, '.csv')))
   } 
   
 }

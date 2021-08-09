@@ -22,6 +22,6 @@
 ####************************
 
 # 1a Declare convert to percent function 
-convert_to_percent <- function(x){
+convertToPercent <- function(x){
   100 * (x - 1)
 }

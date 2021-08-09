@@ -30,14 +30,10 @@
 #### 0: Preparation #### 
 ####********************
 
-# 0a Tell the analyst that the script is beginning 
-StartTime_c_01 <- Sys.time()
-print(paste('begin c_01 at', StartTime_c_01))
-
-# 0b Create the folder structure, if you haven't already
+# 0a Create the folder structure, if you haven't already
 if (!exists('ran_0_01')){
   here::i_am('README.md')
-  source(here::here('scripts', '0_01_setUp_for_Analysis.R'))
+  source(here::here('scripts', '0_01_setUp_for_analysis.R'))
 }
 
 ####******************
@@ -45,19 +41,19 @@ if (!exists('ran_0_01')){
 ####******************
 
 # 1a Bring in the daily temperature dataset 
-if(user == 'Analyst') {temper <- read_fst(here::here('data', 'intermediateData',
+if(user == 'Analyst') {temper <- read_fst(here::here('data', 'intermediate',
                               'daily_weather.fst')) }
 
-if(user == 'Reviewer') {temper <- read_fst(here::here('data', 'intermediateData',
+if(user == 'Reviewer') {temper <- read_fst(here::here('data', 'intermediate',
                                                      'fake_weather.fst')) }
 
 ####**************************************************************
 #### 2: Function to Calculate County-Specific Autocorrelation ####
 ####**************************************************************
 
-calc_autoCorr <- function(DTA){
+calcAutoCorr <- function(dataset){
 
-  dta <- DTA %>% 
+  dta <- dataset %>% 
     arrange(adate) %>% 
     mutate(tlag00 = lag(tmean, 0),
            tlag01 = lag(tmean, 1),
@@ -78,7 +74,7 @@ calc_autoCorr <- function(DTA){
 
   dta <- dta %>% filter(complete.cases(dta))
   
-  b <- dta %>% group_by(fips) %>% 
+  dta.means <- dta %>% group_by(fips) %>% 
     summarize(corr00 = cor(tlag00, tlag00), 
            corr01 = cor(tlag00, tlag01), 
            corr02 = cor(tlag00, tlag02), 
@@ -96,6 +92,8 @@ calc_autoCorr <- function(DTA){
            corr14 = cor(tlag00, tlag14), 
            corr15 = cor(tlag00, tlag15)) %>% 
     ungroup()
+  
+  return(dta.means)
 
 }
 
@@ -107,38 +105,38 @@ calc_autoCorr <- function(DTA){
 temper.fips <- split(temper, temper$fips)
 
 # 3b Calculate the autocorrelation
-corrs <- map(temper.fips, calc_autoCorr) %>% 
+corrs <- map(temper.fips, calcAutoCorr) %>% 
   bind_rows()
 
 # 3c Determine mean temporal autocorr 
 corrs.long <- corrs %>% 
   gather('Lag', 'Corr', -fips) %>% 
   group_by(Lag) %>% 
-  summarize(meanCorr = mean(Corr)) %>% 
+  summarize(mean_corr = mean(Corr)) %>% 
   ungroup() %>% 
   mutate(Lag = as.numeric(str_sub(Lag, 5)))
 
 corrs.long %>% 
   write_csv(here::here(outPath, 'tables', 
-                       paste0('TemporalAutocorr', '.csv')))
+                       paste0('temporal_autocorr', '.csv')))
 
 corrs.final <- read_csv(here::here(outPath, 'tables', 
-                                      paste0('TemporalAutocorr', '.csv')))
+                                      paste0('temporal_autocorr', '.csv')))
 
 
 corrs.final <- data.frame(x = 1:nrow(corrs.long))
 corrs.final$Lag <- corrs.long$Lag
-corrs.final$meanCorr <- corrs.long$meanCorr
+corrs.final$mean_corr <- corrs.long$mean_corr
 
 ####*****************************
 #### 4: Plot Autocorrelation ####
 ####*****************************
 
 png(here::here(outPath, 'plots', 
-               paste0('TemporalAutocorr', '.png')))
+               paste0('temporal_autocorr', '.png')))
 
 ggplot(corrs.long) + 
-  geom_point(aes(x=Lag, y= meanCorr), color = 'orange', fill = 'orange') + 
-  geom_line(aes(x=Lag, y= meanCorr)) + 
+  geom_point(aes(x=Lag, y= mean_corr), color = 'orange', fill = 'orange') + 
+  geom_line(aes(x=Lag, y= mean_corr)) + 
   scale_x_continuous(breaks=0:15)
 dev.off()

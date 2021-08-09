@@ -35,8 +35,8 @@ labelSet = c('per05', 'per95')
 
 # 1b Setup table of models to tabulate
 sensitivityList <- rep('main', 2)
-subSetVarList <- rep('fullSet', 2)
-subSetList <- rep('fullSet', 2)
+subSetVarList <- rep('sex', 2)
+subSetList <- rep('f', 2)
 ERConstraintList <- rep('selected', 2)
 LRConstraintList <- rep('selected', 2)
 indCumulList <- c('estInd', 'estCumul')
@@ -71,7 +71,7 @@ est.table  <- est.table %>%
 
 # 1g Save one version of table
 est.table %>% 
-  write_csv(here::here(outPath, 'tables', 'EE_FullSetAnalysis.csv'))
+  write_csv(here::here(outPath, 'tables', 'EE_FullSetAnalysis_onlyF.csv'))
 
 # 1h Put table in a tidy format, with 3 columns
 est.table <- est.table %>% 
@@ -88,5 +88,5 @@ est.table <- est.table %>%
 # 1j Save table
 est.table %>% 
   write_csv(here::here(outPath, 'tables',
-                       'EE_FullSetAnalysis_pretty.csv'))
+                       'EE_FullSetAnalysis_pretty_onlyF.csv'))
  

@@ -54,13 +54,13 @@ if (!exists('ran_g_01')){
 
 # 1a Name function 
 plot_LRCurve_perExposure_2Mods <- function(
-  SensitivityA, SubSetVarA, SubSetA, ERConstraintA, LRConstraintA,
-  SensitivityB, SubSetVarB, SubSetB, ERConstraintB, LRConstraintB,
-  Contrast, Curve){
-  #SensitivityA <- 'Main' ; SubSetVarA <- 'FullSet'; SubSetA <- 'FullSet' 
-  #ERConstraintA <- 'Selected'; LRConstraintA <- 'Selected'
-  #SensitivityB <- '14DayLag' ; SubSetVarB <- 'FullSet'; SubSetB <- 'FullSet' 
-  #ERConstraintB <- 'Selected'; LRConstraintB <- 'Selected';
+  sensitivityA, subSetVarA, subSetA, ERConstraintA, LRConstraintA,
+  sensitivityB, subSetVarB, subSetB, ERConstraintB, LRConstraintB,
+  contrast, curve){
+  #sensitivityA <- 'Main' ; subSetVarA <- 'fullSet'; subSetA <- 'fullSet' 
+  #ERConstraintA <- 'selected'; LRConstraintA <- 'selected'
+  #sensitivityB <- '14DayLag' ; subSetVarB <- 'fullSet'; subSetB <- 'fullSet' 
+  #ERConstraintB <- 'selected'; LRConstraintB <- 'selected';
   #Curve = 'Point'; Contrast <- '0595'
   
   
@@ -70,97 +70,105 @@ plot_LRCurve_perExposure_2Mods <- function(
   
   # 1A.a Read model estimates
   # 2A.a Read Table 
-  est.table <- bind_rows(read_estimates(SensitivityA, SubSetVarA, SubSetA, 
+  est.table <- bind_rows(readEstimates(sensitivityA, subSetVarA, subSetA, 
                                         ERConstraintA, LRConstraintA, 'EstInd'), 
-                         read_estimates(SensitivityB, SubSetVarB, SubSetB, 
+                         readEstimates(sensitivityB, subSetVarB, subSetB, 
                                         ERConstraintB, LRConstraintB, 'EstInd'))
   
   # 1A.b Keep only relevant exposure contrast
   # 1A.b.i Determine the relevant Labels
-  if(Contrast == '0595'){labelSet = c('per05', 'per95')}
+  if(contrast == '05_95'){labelSet = c('per05', 'per95')}
   # 1A.b.ii Isolate the relevant exposure constrats
   est.table <- est.table %>% 
-    filter(Label %in% labelSet)
+    filter(label %in% labelSet)
   
   # 1A.c Determine type of contrast 
-  if(SensitivityA != SensitivityB){
-    ModelComparison <- paste0(SubSetVarA, '_', SubSetA, '_', 
+  if(sensitivityA != sensitivityB){
+    modelComparison <- paste0(subSetVarA, '_', subSetA, '_', 
                               ERConstraintA, '_', LRConstraintA, '_',
-                              'Sensitivity', '_', SensitivityA, '_Vs_', SensitivityB)
+                              'sensitivity', '_', sensitivityA, '_Vs_', sensitivityB)
     est.table <- est.table %>% 
-      mutate(ModComp = Sensitivity)
-  }else if(SubSetA != SubSetB){
-    ModelComparison <- paste0(SensitivityA, '_', ERConstraintA, '_', LRConstraintA, '_',
-                              'SubSet', '_', SubSetA, '_Vs_', SubsetB)
+      mutate(mod_comp = sensitivity)
+  }else if(subSetA != subSetB){
+    modelComparison <- paste0(sensitivityA, '_', ERConstraintA, '_', LRConstraintA, '_',
+                              'subSet', '_', subSetA, '_Vs_', subSetB)
     est.table <- est.table %>% 
-      mutate(ModComp = SubSet)
+      mutate(mod_comp = subSet)
   }else if(ERConstraintA != ERConstraintB){
-    ModelComparison <- paste0(SensitivityA, '_', SubSetVarA, '_', SubSetA, '_',
+    modelComparison <- paste0(sensitivityA, '_', subSetVarA, '_', subSetA, '_',
                               'ERConstraint', '_', ERConstraintA, '_Vs_', ERConstraintB)
     est.table <- est.table %>% 
-      mutate(ModComp = ERConstraint)
+      mutate(mod_comp = ERConstraint)
   }else if(LRConstraintA != LRConstraintB){
-    ModelComparison <- paste0(SensitivityA, '_', SubSetVarA, '_', SubSetA, '_',
+    modelComparison <- paste0(sensitivityA, '_', subSetVarA, '_', subSetA, '_',
                               'LRConstraint', '_', LRConstraintA, '_Vs_', LRConstraintB)
     est.table <- est.table %>% 
-      mutate(ModComp = LRConstraint)
+      mutate(mod_comp = LRConstraint)
   }
   
   # 1A.c Wrangle estimates 
   est.table <- est.table %>% 
-    dplyr::select(-Sensitivity, -SubSetVar, -SubSet, -IndCumul, -Label) %>%
-    gather('LagName', 'Estimate', -CounterfactualTemp, -ModComp) %>% 
-    mutate(VarName = str_sub(LagName, 1, 3), Lag = as.numeric(str_sub(LagName, 11))) %>%  
-    dplyr::select(-LagName) %>%
-    spread(VarName, Estimate) %>% 
-    mutate(fit.pc = convert_to_percent(fit), 
-           lci.pc = convert_to_percent(lci), uci.pc = convert_to_percent(uci)) 
+    dplyr::select(-sensitivity, -subSetVar, -subSet, -indCumul, -label) %>%
+    gather('lag_name', 'estimate', -counterfactual_temp, -mod_comp) %>% 
+    mutate(var_name = str_sub(lag_name, 1, 3), lag_day = as.numeric(str_sub(lag_name, 11))) %>%  
+    dplyr::select(-lag_name) %>%
+    spread(var_name, estimate) %>% 
+    mutate(fit_pc = convertToPercent(fit), 
+           lci_pc = convertToPercent(lci), uci_pc = convertToPercent(uci)) 
   
-  # 1A.d Convert CounterfactualTemp to character so that you can use discrete color scale
+  # 1A.d Convert counterfactual_temp to character so that you can use discrete color scale
   est.table <- est.table %>% 
-    mutate(CounterfactualTemp = as.character(round(CounterfactualTemp, 2)))
+    mutate(counterfactual_temp = as.character(round(counterfactual_temp, 2))) 
+  est.table <- est.table %>% 
+    mutate(counterfactual_temp =
+             factor(counterfactual_temp,
+                    levels = c(min(as.numeric(est.table$counterfactual_temp)), 
+                               max(as.numeric(est.table$counterfactual_temp)))))
   
   # 1A.e Isolate to whole-number lags 
   # only for the point estimate plot 
   # 1A.e.i Determine the number of lags
-  if(str_detect(paste0(SensitivityA, SensitivityB), 'DayLag')) {
-    numLag <- max(c(as.numeric(str_remove_all(SensitivityA, '[A-z]')), 
-                    as.numeric(str_remove_all(SensitivityB, '[A-z]')) ), 
+  if(str_detect(paste0(sensitivityA, sensitivityB), 'DayLag')) {
+    numLag <- max(c(as.numeric(str_remove_all(sensitivityA, '[A-z]')), 
+                    as.numeric(str_remove_all(sensitivityB, '[A-z]')) ), 
                   na.rm = TRUE)  
   }else{numLag <- 7}
   # 1A.e.ii restrict to whole-number lags
-  if(Curve == 'Point'){
-    est.table <- est.table %>% filter(Lag %in% 0:numLag)}
+  if(curve == 'Point'){
+    est.table <- est.table %>% filter(lag_day %in% 0:numLag)}
+  
+  # set range of y-axis
+  if(contrast == '0_100'){est.min <- -20; est.max <- 10}
+  if(contrast == '05_95'){est.min <- -7; est.max <- 6}
   
   ####*******************
   #### 1B: Make Plot ####
   ####******************* 
   
   # 1B.a Determine type of curve 
-  if(Curve == 'Smooth'){
-    ggLR1 <- geom_ribbon(aes(ymin= lci.pc,  ymax = uci.pc, fill = ModComp), 
+  if(curve == 'Smooth'){
+    ggLR1 <- geom_ribbon(aes(ymin= lci_pc,  ymax = uci_pc, fill = mod_comp), 
                  alpha  = 0.35, col=NA)
-    ggLR2 <- geom_line(aes(y = fit.pc, col = ModComp), size = 2)
+    ggLR2 <- geom_line(aes(y = fit_pc, col = mod_comp), size = 2)
   }
-  if(Curve == 'Point'){
-    ggLR1 <- geom_point(aes(y = fit.pc, fill= ModComp, color = ModComp, shape = ModComp), size = 3)
-    ggLR2 <-  geom_errorbar(aes(ymin= lci.pc,  ymax = uci.pc, color = ModComp), size = 0.75)
+  if(curve == 'Point'){
+    ggLR1 <- geom_point(aes(y = fit_pc, fill= mod_comp, color = mod_comp, shape = mod_comp), size = 3)
+    ggLR2 <-  geom_errorbar(aes(ymin= lci_pc,  ymax = uci_pc, color = mod_comp), size = 0.75)
   }
   
   # 1B.a Create plot 
   TP.a <- est.table %>%
-    ggplot(aes(Lag)) + 
+    ggplot(aes(lag_day)) + 
     geom_hline(yintercept=0, color ='grey' ) + 
     ggLR1 + ggLR2 +
-    facet_grid(.~CounterfactualTemp) +
-    scale_fill_manual(values = ColorArray$ModContrast) + 
-    scale_color_manual(values = ColorArray$ModContrast) + 
+    facet_grid(.~counterfactual_temp) +
+    scale_fill_manual(values = colorArray$modContrast) + 
+    scale_color_manual(values = colorArray$modContrast) + 
     labs(y = paste0('Change in UTI Rate (%)'), 
          x = paste0('Days Since Exposure')) + 
-    #coord_cartesian(ylim = c(Ymin, Ymax), expand = TRUE,
-    #               default = FALSE, clip = 'off') + 
-    #scale_y_continuous(breaks = seq(Ymin, Ymax, by = YStep)) +
-    # scale_x_continuous(breaks = c(0, 5, 10, 15, 20, 25, 30, 35)) +
+    scale_x_continuous(breaks = c(0, 3, 7, 10, 13)) +
+    scale_y_continuous(breaks = seq(est.min, est.max, by = 2), 
+                       limits = c(est.min, est.max)) +
     tema + 
     theme(strip.background = element_blank(), 
           strip.text = element_blank())  +
@@ -175,11 +183,11 @@ plot_LRCurve_perExposure_2Mods <- function(
   
   # 1B.b Print plots
   png(here::here(outPath, 'plots',
-                 paste0('g07_LR_', ModelComparison, '_', Contrast,'_', Curve, '.png')), 
-      width = WW.fig*2, height = HH.fig*0.75, res =RR.fig*1)
+                 paste0('g07_LR_', modelComparison, '_', contrast,'_', curve, '.png')), 
+      width = ww.fig*2, height = hh.fig*0.75, res = rr.fig*1)
   print(tag_facet(TP.a, 
-                  tag_pool = paste(distinct(est.table,CounterfactualTemp)$CounterfactualTemp, ' deg C'), 
-                  x = -0.5, y = 0.75*max(est.table$uci.pc, na.rm = TRUE)))
+                  tag_pool = paste(distinct(est.table,counterfactual_temp)$counterfactual_temp, ' deg C'), 
+                  x = -0.5, y = 0.75*max(est.table$uci_pc, na.rm = TRUE)))
   dev.off()
 }
 
@@ -188,34 +196,17 @@ plot_LRCurve_perExposure_2Mods <- function(
 ####*********************
 
 # 2a Main Models
-plot_LRCurve_perExposure_2Mods('Main', 'FullSet', 'FullSet', 'Selected', 'Selected',
-                         '14DayLag', 'FullSet', 'FullSet', 'Selected', 'Selected',
-                         '0595', 'Smooth')
-plot_LRCurve_perExposure_2Mods('Main', 'FullSet', 'FullSet', 'Selected', 'Selected',
-                         '14DayLag', 'FullSet', 'FullSet', 'Selected', 'Selected',
-                         '0595', 'Point')
+plot_LRCurve_perExposure_2Mods('main', 'fullSet', 'fullSet', 'selected', 'selected',
+                               'main', 'sex', 'f', 'selected', 'selected',
+                               '05_95', 'Smooth')
+plot_LRCurve_perExposure_2Mods('main', 'fullSet', 'fullSet', 'selected', 'selected',
+                               'main', 'sex', 'f', 'selected', 'selected',
+                               '05_95', 'Point')
 
-plot_LRCurve_perExposure_2Mods('21DayLag', 'FullSet', 'FullSet', 'Selected', 'Selected', 
-                               '14DayLag', 'FullSet', 'FullSet', 'Selected', 'Selected',
-                               '0595', 'Smooth')
+plot_LRCurve_perExposure_2Mods('main', 'sutter_county', 'sutter', 'selected', 'selected',
+                               'main', 'sutter_county', 'not_sutter', 'selected', 'selected',
+                               '05_95', 'Smooth')
 
-plot_LRCurve_perExposure_2Mods('21DayLag', 'FullSet', 'FullSet', '3dfevenknots', '3dfevenknots', 
-                               '14DayLag', 'FullSet', 'FullSet', '3dfevenknots', '3dfevenknots', 
-                               '0595', 'Smooth')
-
-plot_LRCurve_perExposure_2Mods('21DayLag', 'FullSet', 'FullSet', '3dfevenknots', '4dflogknots',
-                               '14DayLag', 'FullSet', 'FullSet', '3dfevenknots', '4dflogknots',
-                               '0595', 'Smooth')
-
-
-plot_LRCurve_perExposure_2Mods('21DayLag', 'FullSet', 'FullSet', '3dfevenknots', 'psp', 
-                               '14DayLag', 'FullSet', 'FullSet', '3dfevenknots', 'psp', 
-                               '0595', 'Smooth')
-
-plot_LRCurve_perExposure_2Mods('Main', 'FullSet', 'FullSet', '3dfevenknots', '4dflogknots', 
-                               'noConstraint', 'FullSet', 'FullSet', '3dfevenknots', 'free', 
-                               '0595', 'Point')
-
-plot_LRCurve_perExposure_2Mods('Main', 'FullSet', 'FullSet', '3dfevenknots', '4dflogknots', 
-                               'oneLag', 'FullSet', 'FullSet', '3dfevenknots', 'oneLag', 
-                               '0595', 'Point')
+plot_LRCurve_perExposure_2Mods('explor', 'dow', 'wk', 'selected', 'selected', 
+                               'explor', 'dow', 'wknd', 'selected', 'selected', 
+                               '05_95', 'Point')

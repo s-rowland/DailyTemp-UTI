@@ -29,13 +29,12 @@
 ####********************
 
 # 0a Tell the analyst that the script is beginning 
-StartTime_a_03 <- Sys.time()
-print(paste('begin a_03 at', StartTime_a_03))
+tic('Exposure assigned and days matched')
 
 # 0b Create the folder structure, if you haven't already
 if (!exists('ran_0_01')){
   here::i_am('README.md')
-  source(here::here('scripts', '0_01_setUp_for_Analysis.R'))
+  source(here::here('scripts', '0_01_setUp_for_analysis.R'))
 }
 
 ####**************************
@@ -45,7 +44,7 @@ if (!exists('ran_0_01')){
 # 1a Bring in either the real UTI data or the fake data
 # the outPath parameter is set in subsection 0d of 
 # 0_01_setUp_for_Analysis.R
-cases <- read_fst(here::here('data', 'intermediateData', 
+cases <- read_fst(here::here('data', 'intermediate', 
                              paste0('cases_', outcomeName, '.fst'))) %>%  mutate(ZeroUTI = 'NonZero UTI') 
 
 
@@ -102,10 +101,10 @@ rm(allCombos, uniqueDates, uniqueFIPS, check, sutter_list)
 
 # 2a Read exposure data 
 if(outcomeName == 'UTI'){
-  temper <- read_fst(here::here('data', 'intermediateData', 'daily_weather.fst')) 
+  temper <- read_fst(here::here('data', 'intermediate', 'daily_weather.fst')) 
 }
 if(outcomeName == 'fake'){
-  temper <- read_fst(here::here('data', 'intermediateData', 'fake_weather.fst')) 
+  temper <- read_fst(here::here('data', 'intermediate', 'fake_weather.fst')) 
 }
 
 # 2b Process exposure data variables 
@@ -114,29 +113,26 @@ temper <- temper %>%
 temper$fips <- as.numeric(temper$fips)
 
 # 2c Rename the cases dataframe 
-dta_assignedTemp <- cases
+dtaAssignedTemp <- cases
 
 # 2d Assign exposure via a loop 
 # if this step takes a long time we can find a way to parallelize it
 # where each iteration is a new lag 
 maxLag <- 22
 for(l in 0:(maxLag-1)){
-  dta_assignedTemp <- assign_laggedExp(dta_assignedTemp, temper, l)
+  dtaAssignedTemp <- assign_laggedExp(dtaAssignedTemp, temper, l)
 }
 
 # 2e Confirm that some counties do not have UTIs on every day 
-dta_6041 <- dta_assignedTemp %>% dplyr::filter(fips==6041)
+dta_6041 <- dtaAssignedTemp %>% dplyr::filter(fips==6041)
 head(dta_6041)
 
 # NOTE: we should change the averaging period for RH if we use more lags
 # 2f Create 7-day average rh
-dta_assignedTemp$meanRH <- (dta_assignedTemp$rLag00 + dta_assignedTemp$rLag01 + dta_assignedTemp$rLag02 + 
-                              dta_assignedTemp$rLag03 + dta_assignedTemp$rLag04 + dta_assignedTemp$rLag05 +
-                              dta_assignedTemp$rLag06)/7
+dtaAssignedTemp <- dtaAssignedTemp %>% 
+  mutate((1/7) * (rLag00+rLag01+rLag02+rLag03+rLag04+rLag05+rLag06))
 
-
-
-# 2h Clean up 
+# 2g Clean up 
 rm(cases, dta_6041)
 
 ####*******************
@@ -152,7 +148,7 @@ rm(cases, dta_6041)
 # according to our criteria. 
 
 # 3a Create matchID variable 
-dta_assignedTemp <- dta_assignedTemp %>% 
+dtaAssignedTemp <- dtaAssignedTemp %>% 
   mutate(matchID = paste0(fips, '_', YYYY, MM, DoW)) %>% 
   dplyr::select(-YYYY, -MM, -DoW)
 
@@ -177,16 +173,14 @@ dta <- dta %>%
 
 # 5a Save data 
 # I use the fst format because it saves memory and it faster to read/write
-dta_assignedTemp %>% 
+dtassignedTemp %>% 
   dplyr::select(adate, fips, matchID, contains('case_count'),
                 contains('tLag'), contains("rLag"), meanRH) %>%
   write_fst(here::here('data', 'preparedData', 
                        paste0('cases_assignedTemp', outcomeName, '.fst')))
 
-# 5b Tell the analyst that the script is done
-cat('completed a_03 at ', paste(Sys.time()), 
-    '\n total time: ', round((Sys.time() - StartTime_a_03), 1), ' min\n')
-rm(StartTime_a_03)
+# 5b Clean up 
+rm(l, maxLag, dtaAssignedTemp, temper)
 
-# 5c Clean up 
-rm(l, maxLag, dta_assignedTemp, temper)
+# 5c Tell the analyst that the script is done
+toc()
