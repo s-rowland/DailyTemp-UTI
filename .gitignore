@@ -1,17 +1,30 @@
+# R studio environment stuff
+
 .Rproj.user
 .Rhistory
 .RData
 .Ruserdata
 
+# data 
 **/*.fst
-HourlyTemp_Stroke
-DataPrep
-data
+data/prepared
+data/intermediate/combined_cases_UTI.csv
+
+
+# Code not used for the manuscript
 scripts/depreciated
+scripts/e*
+scripts/f*
+
+# Results from simulation studies (not shared)
+outputsFake_analyst_*
+outputs_exploreLinear
+
+# Results for manuscript (not shared)
 outputs*
+
+# writing material and communication for manuscript 
+manuscript
 
 # Getting rid of pesky .DS_Store files
 *.DS_Store
-
-# Ignoring file that (code reviewer) uses to easily search thru repo 
-directory_structures.txt
