@@ -2,7 +2,7 @@
 # Functions
 # Daily Temperature-UTI Project 
 # Joan Casey & Sebastian T. Rowland
-# Updated 05/19/2021
+# Updated 11/01/2021
 
 ####***********************
 #### Table of Contents #### 

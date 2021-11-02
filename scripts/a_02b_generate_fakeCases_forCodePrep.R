@@ -30,6 +30,9 @@ if (!exists('ran_0_01')){
   source(here::here('scripts', '0_01_setUp_for_analysis.R'))
 }
 
+# 0b Set seed 
+set.seed(1234)
+
 ####**************************
 #### 1: Create Fake Cases ####
 ####**************************

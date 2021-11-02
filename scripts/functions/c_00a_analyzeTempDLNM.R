@@ -2,7 +2,7 @@
 # Functions
 # Daily Temperature-UTI Project 
 # Joan Casey & Sebastian T. Rowland
-# Updated 05/19/2021
+# Updated 11/01/2021
 
 ####***********************
 #### Table of Contents #### 
@@ -17,6 +17,8 @@
 # 5: Create Crossbasis
 # 6: Fit Health Model 
 # 7: Save Results
+  # 7A: Save Model AIC
+  # 7B: Save Model Results
 
 ####**************
 #### N: Notes #### 
@@ -79,12 +81,11 @@ analyzeTempDLNM <- function(sensitivity, subSetVar, subSet,
     mutate(ADMDateTime = adate)
     #mutate(ADMDateTime = parse_date_time(adate, 'ymd', tz = 'America/Los_Angeles'))
   
-  # Here I am making random variables for testing
+  # 2b Here I am making random variables for testing
+  # not used for manuscript
   minDateTime = min(dta$ADMDateTime)
   dta <- dta %>% 
     mutate(day_index = as.numeric(ADMDateTime - minDateTime, 'days'))
-  
-  # Variables for testing subsetting
   dta <- dta %>% 
     mutate(MM = month(ADMDateTime), 
            DoW = wday(ADMDateTime)) %>% 
@@ -282,7 +283,7 @@ analyzeTempDLNM <- function(sensitivity, subSetVar, subSet,
     }
     # 7A.c.ii Update the model with the new distribution
     mod1 <- update(mod,family = 'x.quasipoisson')
-    # 7A.c.i Extract the overdispersion factor
+    # 7A.c.iii Extract the overdispersion factor
     qaic.mod <- QAIC(mod1, chat = summary(mod1)$dispersion)
     # reminder: equation for dispersion factor
     #with(object,sum((weights * residuals^2)[weights > 0])/df.residual)

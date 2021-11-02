@@ -2,7 +2,7 @@
 # Functions
 # Daily Temperature-UTI Project 
 # Joan Casey & Sebastian T. Rowland
-# Updated 05/19/2021
+# Updated 11/01/2021
 
 ####***********************
 #### Table of Contents #### 
@@ -81,6 +81,7 @@ readEstimates <- function(sensitivity, subSetVar, subSet,
       filter(counterfactual_temp > temp.lowerLimSub & 
                counterfactual_temp < temp.upperLimSub)
   }
+  
   # 1f Return object 
   return(est.table)
   
