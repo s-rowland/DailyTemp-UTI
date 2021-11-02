@@ -1,14 +1,14 @@
 # Set Up R Environment for Data Prep and Analysis
-# Daily Temperature-UTI Project 
+# Daily Temperature-UTI Project
 # Joan Casey & Sebastian T. Rowland
-# Updated 05/19/2021
+# Updated 11/01/2021
 
 ####***********************
-#### Table of Contents #### 
+#### Table of Contents ####
 ####***********************
 
 # D: Description
-# 0: Preparation 
+# 0: Preparation
 # 1: Load Packages
 # 2: Create Folder Structure
 # 3: Source Functions
@@ -18,109 +18,116 @@
 #### D: Description ####
 ####********************
 
-# Here we create the folder structure for the rest of the analyses. 
-# We also load packages, source the functions we will use 
-# and create the tables that we will fill with the grid search results. 
-# By making a specific script for these preparation steps, we can avoid repeating 
-# code at the start of each script; we can just conditionally source this script 
-# at the start of all other scripts. 
-# This way, even if I want to just run, say, a plotting script, I can still get 
-# all the packages loaded. 
+# Here we create the folder structure for the rest of the analyses.
+# We also load packages, source the functions we will use
+# and create the tables that we will fill with the grid search results.
+# By making a specific script for these preparation steps, we can avoid repeating
+# code at the start of each script; we can just conditionally source this script
+# at the start of all other scripts.
+# This way, even if I want to just run, say, a plotting script, I can still get
+# all the packages loaded.
 
 ####********************
-#### 0: Preparation #### 
+#### 0: Preparation ####
 ####********************
 
 # 0a Load Packages
 library(pacman)
 
-# 0b Add marker 
-ran_0_01 <- 'ran_0_01'
+# 0b Add marker
+ran_0_01 <- "ran_0_01"
 
-# 0c Set user - this only controls the outputs path 
-# the user should be 'Analyst' unless you are the code reviewer who 
+# 0c Set user - this only controls the outputs path
+# the user should be 'Analyst' unless you are the code reviewer who
 # is running the code to test for reproducibility
-user <- 'Analyst' 
+user <- "Analyst"
 # user <- 'Reviewer'
 
-# 0d Set outcomeName  
-# this also controls the outputs path 
-# The outcome name should be 'UTI' unless you are testing the code for 
-# reproducibility. 
-# Ideally both the analyst and the reviewer run the code with the fake data 
+# 0d Set outcomeName
+# this also controls the outputs path
+# The outcome name should be 'UTI' unless you are testing the code for
+# reproducibility.
+# Ideally both the analyst and the reviewer run the code with the fake data
 # and compare results to confirm reproducibility
-outcomeName <- 'UTI'
-#outcomeName <- 'fake'
+# outcomeName <- 'UTI'
+outcomeName <- "fake"
 
 ####**********************
-#### 1: Load Packages #### 
+#### 1: Load Packages ####
 ####**********************
 
-# 1a Load all packages that we will need to prepare the data and conduct analysis 
-p_load(tidyverse,lubridate,magrittr,  # tidyverse packages
-       fst, tictoc,
-       furrr, future, progress, progressr, # efficiency/parallelization packages
-       gnm, dlnm, splines, MuMIn, # stats packages
-       egg) # plotting packages
+# 1a Load all packages that we will need to prepare the data and conduct analysis
+p_load(
+  tidyverse, lubridate, magrittr, styler, # tidyverse packages
+  fst, tictoc,
+  # furrr, future, progress, progressr, # efficiency/parallelization packages
+  # not used
+  gnm, dlnm, splines, MuMIn, # stats packages
+  egg, cowplot
+) # plotting packages
 
 ####********************************
-#### 2: Create Folder Structure #### 
+#### 2: Create Folder Structure ####
 ####********************************
 
-# This step increases our reproducibility because it allows a user to 
-# automatically generate the correct folders. 
-# If we are running a test with synthetic data, we can also put our results 
-# in a sandbox, 
+# This step increases our reproducibility because it allows a user to
+# automatically generate the correct folders.
+# If we are running a test with synthetic data, we can also put our results
+# in a sandbox,
 # e.g., the outputsFake_analyst folder
 
 # 2a Declare directories
-project.folder <- paste0(print(here::here()),'/')
-  data.folder <- paste0(project.folder, 'data/')
-      rawData.folder          <- paste0(data.folder, 'raw/')
-      intermediateData.folder <- paste0(data.folder, 'intermediate/')
-      finaData.folder        <- paste0(data.folder, 'prepared/')
-  scripts.folder  <- paste0(project.folder, 'scripts/')
-      functions.folder  <- paste0(scripts.folder, 'functions/')
-  if(outcomeName == 'UTI'){outPath <- 'outputs'
-  } else{outPath <- paste0('outputs_', outcomeName, '_', user)}
-  outputs.folder <- paste0(project.folder, outPath, '/')
-      models.folder   <- paste0(outputs.folder, 'models/')
-      estimates.folder <- paste0(outputs.folder, 'estimates/')
-      plots.folder <- paste0(outputs.folder, 'plots/')
-      tables.folder <- paste0(outputs.folder, 'tables/')
-      manuscript.folder <- paste0(outputs.folder, 'manuscript/')
+project.folder <- paste0(print(here::here()), "/")
+data.folder <- paste0(project.folder, "data/")
+rawData.folder <- paste0(data.folder, "raw/")
+intermediateData.folder <- paste0(data.folder, "intermediate/")
+finaData.folder <- paste0(data.folder, "prepared/")
+scripts.folder <- paste0(project.folder, "scripts/")
+functions.folder <- paste0(scripts.folder, "functions/")
+if (outcomeName == "UTI") {
+  outPath <- "outputs"
+} else {
+  outPath <- paste0("outputs_", outcomeName, "_", user)
+}
+outputs.folder <- paste0(project.folder, outPath, "/")
+models.folder <- paste0(outputs.folder, "models/")
+estimates.folder <- paste0(outputs.folder, "estimates/")
+plots.folder <- paste0(outputs.folder, "plots/")
+tables.folder <- paste0(outputs.folder, "tables/")
+manuscript.folder <- paste0(outputs.folder, "manuscript/")
+
 
 # 2b Identify list of folder locations which have just been created above
-folder.names <- grep('.folder',names(.GlobalEnv),value=TRUE)
+folder.names <- grep(".folder", names(.GlobalEnv), value = TRUE)
 
 # 2c Create function to create list of folders
-# note that the function will not create a folder if it already exists 
-createFolders <- function(name){
-  ifelse(!dir.exists(get(name)), dir.create(get(name), recursive=TRUE), FALSE)
+# note that the function will not create a folder if it already exists
+createFolders <- function(name) {
+  ifelse(!dir.exists(get(name)), dir.create(get(name), recursive = TRUE), FALSE)
 }
 
 # 2d Create the folders named above
 lapply(folder.names, createFolders)
 
-# 2e Clean up 
-rm(list=ls(pattern='folder'))
+# 2e Clean up
+rm(list = ls(pattern = "folder"))
 
 ####*************************
-#### 3: Source Functions #### 
+#### 3: Source Functions ####
 ####*************************
 
 # 3a Get the names of all of the scripts that are just functions
-myFunctions <- list.files(path = here::here('scripts', 'functions'))
+myFunctions <- list.files(path = here::here("scripts", "functions"))
 
-# 3b Define function to run sources 
-sourceMyFunctions <- function(functionName){
-  source(here::here('scripts', 'functions', functionName))
+# 3b Define function to run sources
+sourceMyFunctions <- function(functionName) {
+  source(here::here("scripts", "functions", functionName))
 }
 
 # 3c Source all the function scripts
-# we don't actually need the assignment, it just removes annoying 
-# output generated by the sourcing code. 
-# since we are just sourcing these, we can just use map rather than a 
+# we don't actually need the assignment, it just removes annoying
+# output generated by the sourcing code.
+# since we are just sourcing these, we can just use map rather than a
 # future-based command
 a <- map(myFunctions, sourceMyFunctions)
 
@@ -128,36 +135,40 @@ a <- map(myFunctions, sourceMyFunctions)
 rm(a, myFunctions, sourceMyFunctions)
 
 ####**************************************
-#### 4: Create Tables for Grid Search #### 
+#### 4: Create Tables for Grid Search ####
 ####**************************************
 
-# Creating these tables is important because it allows us to record the AIC 
-# so we can report them in the manuscript 
-# Note that if we use a quasi-poisson distribution, then we actually 
+# Creating these tables is important because it allows us to record the AIC
+# so we can report them in the manuscript
+# Note that if we use a quasi-poisson distribution, then we actually
 # calculate the QAIC (since quasi-poisson is not a proper distribution)
-# In this case, AIC is a bit of a misnomer, and we can change this to 
+# In this case, AIC is a bit of a misnomer, and we can change this to
 # 'QAIC tables'
 
 # 4a Create table for model's AIC
-if(!file.exists(here::here(outPath, 'tables', 'model_AIC.csv'))){
-  data.frame(sensitivity = NA, 
-             subSetVar = NA, 
-             subSet = NA,
-             ERConstraint = NA, 
-             LRConstraint = NA, 
-             AIC = NA, 
-             AkaikeWeight = NA,
-             run_date = NA) %>%  
-    write_csv(here::here(outPath, 'tables', 'model_AIC.csv'))
+if (!file.exists(here::here(outPath, "tables", "model_AIC.csv"))) {
+  data.frame(
+    sensitivity = NA,
+    subSetVar = NA,
+    subSet = NA,
+    ERConstraint = NA,
+    LRConstraint = NA,
+    AIC = NA,
+    AkaikeWeight = NA,
+    run_date = NA
+  ) %>%
+    write_csv(here::here(outPath, "tables", "model_AIC.csv"))
 }
 
 # 4b Create table of the final selected models
-if(!file.exists(here::here(outPath, 'tables', 'selected_constraints.csv'))){
-  data.frame(sensitivity = NA, 
-             subSetVar = NA, 
-             subSet = NA,
-             ERConstraint = NA, 
-             LRConstraint = NA, 
-             run_date = NA) %>%  
-    write_csv(here::here(outPath, 'tables', 'selected_constraints.csv'))
+if (!file.exists(here::here(outPath, "tables", "selected_constraints.csv"))) {
+  data.frame(
+    sensitivity = NA,
+    subSetVar = NA,
+    subSet = NA,
+    ERConstraint = NA,
+    LRConstraint = NA,
+    run_date = NA
+  ) %>%
+    write_csv(here::here(outPath, "tables", "selected_constraints.csv"))
 }

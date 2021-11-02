@@ -37,16 +37,15 @@ if (!exists('ran_0_01')){
 ####******************
 
 # 1a Bring in the dataset of the matched days with exposure
-dta <- read_fst(here::here('data', 'preparedData',
+# 1a Bring in the dataset of the matched days with exposure
+dta <- read_fst(here::here('data', 'prepared',
                            paste0('cases_assignedTemp', outcomeName, '.fst')))
 
-# 1b Bring in the daily temperature dataset 
-if(outcomeName == 'UTI'){
-  temper <- read_fst(here::here('data', 'intermediateData', 'daily_weather.fst')) 
-}
-if(outcomeName == 'fake'){
-  temper <- read_fst(here::here('data', 'intermediateData', 'fake_weather.fst')) 
-}
+# 1b Generate set of observed temperatures
+tempObs <- dta %>% 
+  group_by(adate, fips) %>% 
+  summarize(temp = mean(tLag00))
+
 
 # 1c Get the selected constraints of the main model 
 SelectedModel <- read_csv(here::here(outPath, 'tables',
@@ -56,6 +55,14 @@ SelectedModel <- read_csv(here::here(outPath, 'tables',
 ####****************************
 #### 3: Fit Alternative Lag ####
 ####****************************
+
+analyzeTempDLNM('lagBspline', 'fullSet', 'fullSet',
+                 '3dfevenknots', 'bspline', 'saveModel')
+analyzeTempDLNM('lagBspline4DayLag', 'fullSet', 'fullSet',
+                '3dfevenknots', 'bspline', 'saveModel')
+analyzeTempDLNM('lagBspline7DayLag', 'fullSet', 'fullSet',
+                '3dfevenknots', 'bspline', 'saveModel')
+
 
 # force even knots
 analyze_dlnmTemp('Main', 'FullSet', 'FullSet',

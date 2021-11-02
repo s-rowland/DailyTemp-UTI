@@ -24,11 +24,22 @@
 
 # 1a Name function
 readEstimates <- function(sensitivity, subSetVar, subSet,
-                                   ERConstraint, LRConstraint, indCumul, expRange = 'all'){
-  #  sensitivity <- 'Main'; subSetVar <- 'FullSet'; subSet <- 'FullSet'; 
-  # indCumul <- 'EstInd' # indCumul can be 'EstInd' or 'EstCumul'
+                          ERConstraint, LRConstraint, indCumul, expRange = 'all'){
+  
+  #  sensitivity <- 'main'; subSetVar <- 'FullSet'; subSet <- 'FullSet'; 
+  # ERConstraint <- 'selectedMain'; LRConstraint <- 'selectedMain'
+  # indCumul <- 'EstInd'; refT <- '5thPer'
+  # indCumul can be 'EstInd' or 'EstCumul'
 
   # 1b Identify the selected model constraints if appropriate
+  if(ERConstraint == 'selectedMain' & LRConstraint == 'selectedMain'){
+    selectedConstraints <- read_csv(here::here(outPath, 'tables',
+                                               'selected_constraints.csv')) %>% 
+      filter(sensitivity == 'main', 
+             subSetVar == 'fullSet', subSet == 'fullSet')
+    ERConstraint <- selectedConstraints$ERConstraint[1]
+    LRConstraint <- selectedConstraints$LRConstraint[1]
+  }
   if(ERConstraint == 'selected' & LRConstraint == 'selected'){
     selectedConstraints <- read_csv(here::here(outPath, 'tables',
                                          'selected_constraints.csv')) %>% 
@@ -48,7 +59,7 @@ readEstimates <- function(sensitivity, subSetVar, subSet,
   suppressWarnings(
   est.table <- read_csv(here::here(outPath, 'estimates',
                                    paste0(indCumul, '_', modelName, '.csv'))) %>% 
-    dplyr::select(-X1) %>% 
+    dplyr::select(refT, counterfactual_temp, label, contains('rr')) %>% 
     mutate(sensitivity = !!sensitivity, 
            subSetVar = !!subSetVar, subSet = !!subSet, indCumul = !!indCumul) 
   )

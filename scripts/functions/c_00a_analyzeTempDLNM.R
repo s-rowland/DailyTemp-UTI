@@ -49,16 +49,16 @@
 analyzeTempDLNM <- function(sensitivity, subSetVar, subSet,
                              ERConstraint, LRConstraint, saveModel){
    
-  #sensitivity <- 'main'; 
-   #ERConstraint <- '3dfEvenKnots'; LRConstraint <- '3dfLogKnots';
-   #subSetVar <- 'fullSet'; subSet <- 'fullSet';  saveModel <- 'saveAIC'
+  # sensitivity <- 'main'; 
+  # ERConstraint <- '3dfEvenKnots'; LRConstraint <- '3dfLogKnots';
+  # subSetVar <- 'fullSet'; subSet <- 'fullSet';  saveModel <- 'saveAIC'
   
   #sensitivity <- 'explor'; 
   #ERConstraint <- '3dfEvenKnots'; LRConstraint <- '3dfLogKnots';
-  #subSetVar <- 'wknd'; subSet <- 'wknd';  saveModel <- 'saveAIC'
+  #subSetVar <- 'catchementArea'; subSet <- 'kpsc';  saveModel <- 'saveAIC'
   
 # set this instead to test subSetting by a patient characteristic
-  # subSetVar <- 'sex'; subSet <- 'f';  saveModel <- 'saveAIC'
+  # subSetVar <- 'medicaid'; subSet <- 'medicaid';  saveModel <- 'saveAIC'
   
   # set this instead to test subSetting by a time-varying characteristic
   # subSetVar <- 'season'; subSet <- 'sum';  saveModel <- 'saveAIC'
@@ -76,7 +76,8 @@ analyzeTempDLNM <- function(sensitivity, subSetVar, subSet,
   
   # 2a Create secular time variable 
   dta <- dta %>% 
-    mutate(ADMDateTime = parse_date_time(adate, 'ymd', tz = 'America/Los_Angeles'))
+    mutate(ADMDateTime = adate)
+    #mutate(ADMDateTime = parse_date_time(adate, 'ymd', tz = 'America/Los_Angeles'))
   
   # Here I am making random variables for testing
   minDateTime = min(dta$ADMDateTime)
@@ -118,17 +119,17 @@ analyzeTempDLNM <- function(sensitivity, subSetVar, subSet,
   
   # we would also need to add any other temporal or spatial subSets to the 
   # if statement
-  if(subSetVar %in% c('fullSet', 'season', 'sutter_county', 'dow')){
-    dta <- dta %>% mutate(outcome_count = case_count)
+  if(subSetVar %in% c('fullSet', 'season', 'catchmentArea', 'dow')){
+    dta <- dta %>% mutate(outcome_count = case_count_sex_f)
     } else {
     countVar = paste0('case_count_', subSetVar, '_', subSet)
     dta$outcome_count <- dta[, countVar]
   }
   # specical female-only sensitivity analyses so that we can examine the effect 
   # of restricting to females when doing effect modification
-  if(sensitivity == 'onlyF'){
+  if(sensitivity == 'FandM'){
     dta <- dta %>% 
-      mutate(outcome_count = case_count_sex_f)
+      mutate(outcome_count = case_count)
   }
   
   ####******************************************************
@@ -144,7 +145,7 @@ analyzeTempDLNM <- function(sensitivity, subSetVar, subSet,
   # Right now it is set up to only subSet for the season variable 
   # if we create such a variable 
   # if we want to add other variable, we can just add them to the if statement
-  if(subSetVar == 'season' | subSetVar == 'sutter_county' | subSetVar == 'dow'){
+  if(subSetVar == 'season' | subSetVar == 'catchmentArea' | subSetVar == 'dow'){
     dta <- dta %>% 
       rename(subSetVar = !!subSetVar) %>%
       filter(subSetVar == subSet)
@@ -213,6 +214,12 @@ analyzeTempDLNM <- function(sensitivity, subSetVar, subSet,
       lag=c(0,(numLag-1)),
       argvar=list(fun='ns', df = ERdf),
       arglag=list(fun='ps'))}
+  if(str_detect(sensitivity, 'lagBspline')){
+    cb.temp <- crossbasis(
+      exposure_profiles,
+      lag=c(0,(numLag-1)),
+      argvar=list(fun='ns', df = ERdf),
+      arglag=list(fun='bs'))}
   
   ####*************************
   #### 6: Fit Health Model ####
@@ -331,8 +338,8 @@ analyzeTempDLNM <- function(sensitivity, subSetVar, subSet,
                              mean(tempObs$temp) + sd(tempObs$temp), 
                              mean(tempObs$temp) - 10,  mean(tempObs$temp) + 10),
       label = c(rep('ERValues', 100), 'mean', 'per01','per99', 'per05', 'per95', 'per10', 'per90',
-                'per15', 'per85', 'per20', 'per80', 'per25', 'per75', 'MeanMinusSD', 'MeanPlusSD', 
-                'MeanMinus10', 'MeanPlus10')) %>% 
+                'per15', 'per85', 'per20', 'per80', 'per25', 'per75', 'meanMinusSD', 'meanPlusSD', 
+                'meanMinus10', 'meanPlus10')) %>% 
       mutate(counterfactual_temp = round(counterfactual_temp, 7))
     
     # 7B.d Generate estimates
@@ -343,23 +350,39 @@ analyzeTempDLNM <- function(sensitivity, subSetVar, subSet,
     # like the temperature at which there is minimal risk
     # or the temperature where the curve changes shape
     
-    est <- crosspred(basis = cb.temp,
+    est.ref.mean <- crosspred(basis = cb.temp,
                       model = mod,
-                      cen = mean(tempObs), #quantile(tempObs, 0.90, type = 1),
+                      cen = mean(tempObs$temp), # quantile(tempObs$temp, 0.10, type = 1), # 
                       at = expContrasts$counterfactual_temp, 
                       cumul=TRUE, 
                       bylag=0.2)
   
+    est.ref.per05 <- crosspred(basis = cb.temp,
+                             model = mod,
+                             cen = quantile(tempObs$temp, 0.05, type = 1), # quantile(tempObs$temp, 0.10, type = 1), # 
+                             at = expContrasts$counterfactual_temp, 
+                             cumul=TRUE, 
+                             bylag=0.2)
+    
+    
     # 7B.e Extract coefficient fit and CI 
-    fit.table <- as.data.frame(est$matRRfit)  
+    fit.table0 <- as.data.frame(est.ref.mean$matRRfit) %>% 
+      mutate(refT = 'mean') 
+    
+    fit.table <- fit.table0 %>% 
+      bind_rows(as.data.frame(est.ref.per05$matRRfit) %>% mutate(refT = 'per05'))
+    
     colnames(fit.table) <- paste0('fit.rr.', colnames(fit.table))
     fit.table <- fit.table %>%  
-      mutate(counterfactual_temp = as.numeric(row.names(fit.table)))
+      rename(refT = fit.rr.refT) %>%
+      mutate(counterfactual_temp = rep(as.numeric(row.names(fit.table0)), 2))
 
-    lci.table <- as.data.frame(est$matRRlow)  
+    lci.table <- as.data.frame(est.ref.mean$matRRlow) %>% 
+      bind_rows(as.data.frame(est.ref.per05$matRRlow))
     colnames(lci.table) <- paste0('lci.rr.', colnames(lci.table))
     
-    uci.table <- as.data.frame(est$matRRhigh)  
+    uci.table <- as.data.frame(est.ref.mean$matRRhigh) %>% 
+      bind_rows(as.data.frame(est.ref.per05$matRRhigh) )
     colnames(uci.table) <- paste0('uci.rr.', colnames(uci.table))
     
     # 7B.f Combine fit and se for individual lags 
@@ -367,7 +390,8 @@ analyzeTempDLNM <- function(sensitivity, subSetVar, subSet,
     est.table <- bind_cols(fit.table, lci.table, uci.table)
     
     # 7B.g Attach the labels of the exposure contrasts
-    est.table <- est.table %>% full_join(expContrasts, by = 'counterfactual_temp')
+    est.table <- est.table %>% 
+      full_join(expContrasts, by = 'counterfactual_temp')
     
     # 7B.h Save estimate table for individual lags 
     est.table %>%
@@ -378,15 +402,24 @@ analyzeTempDLNM <- function(sensitivity, subSetVar, subSet,
     # the cumulative coefficients represent the relative risk for a day 
     # if the previous set of days were at the 'exposed' temperature value 
     # rather than the reference temperature
-    fit.table <- as.data.frame(est$cumRRfit)  
-    colnames(fit.table) <- paste0('fit.rr.', colnames(fit.table))
-    fit.table <- fit.table %>%  
-      mutate(counterfactual_temp = as.numeric(row.names(fit.table)))
+    fit.table0 <- as.data.frame(est.ref.mean$cumRRfit) %>% 
+      mutate(refT = 'mean') 
     
-    lci.table <- as.data.frame(est$cumRRlow)  
+    fit.table <- fit.table0 %>% 
+      bind_rows(as.data.frame(est.ref.per05$cumRRfit) %>% mutate(refT = 'per05'))
+    
+    colnames(fit.table) <- paste0('fit.rr.', colnames(fit.table))
+    
+    fit.table <- fit.table %>%  
+      rename(refT = fit.rr.refT) %>% 
+      mutate(counterfactual_temp = rep(as.numeric(row.names(fit.table0)), 2))
+    
+    lci.table <- as.data.frame(est.ref.mean$cumRRlow) %>% 
+      bind_rows(as.data.frame(est.ref.per05$cumRRlow)) 
     colnames(lci.table) <- paste0('lci.rr.', colnames(lci.table))
     
-    uci.table <- as.data.frame(est$cumRRhigh)  
+    uci.table <- as.data.frame(est.ref.mean$cumRRhigh) %>% 
+      bind_rows(as.data.frame(est.ref.per05$cumRRhigh) )
     colnames(uci.table) <- paste0('uci.rr.', colnames(uci.table))
     
     # 7B.j Combine fit and se for individual lags 

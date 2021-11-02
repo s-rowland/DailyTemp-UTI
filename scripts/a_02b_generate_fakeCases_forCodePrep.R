@@ -2,7 +2,7 @@
 # Data Preparation
 # Daily Temperature-UTI Project 
 # Joan Casey & Sebastian T. Rowland
-# Updated 05/19/2021
+# Updated 11/01/2021
 
 ####***********************
 #### Table of Contents #### 
@@ -38,15 +38,16 @@ if (!exists('ran_0_01')){
 nDays <- 366 + 365
 
 # 1b Create a vector of fips Codes
-# In the final code we should just pull fips Codes from real exposure dataset 
-activeFIPs <- read_fst(here::here('data', 'intermediateData',
-                                 'fake_temperature.fst')) %>% 
+activeFIPs <- read_fst(here::here('data', 'intermediate',
+                                 'fake_weather.fst')) %>% 
   dplyr::select(fips) %>% 
   distinct() 
 
-temper <- read_fst(here::here('data', 'intermediateData',
-                    'fake_temperature.fst')) 
-# 1c Begin dataset with Index variable
+# 1c Read weather data
+temper <- read_fst(here::here('data', 'intermediate',
+                    'fake_weather.fst')) 
+
+# 1d Begin dataset with Index variable
 cases <- expand_grid(
   day_index = c(1:nDays),
   fips = activeFIPs$fips) 
@@ -56,48 +57,63 @@ cases <- expand_grid(
 # because sometime excel will autocorrect dates to whatever excel thinks is the 
 # right interpretation. 
 cases <- cases %>%  
-  mutate(adate = parse_date_time('1/1/1999', 'mdy', tz = 'America/Los_Angeles') + 
+  mutate(adate0 = parse_date_time('1/1/1999', 'mdy', tz = 'America/Los_Angeles') + 
            day_index*60*60*24) %>% 
-  mutate(adate = str_sub(str_remove_all(adate, '-'), 0, 8)) %>%
+  mutate(adate = str_sub(str_remove_all(adate0, '-'), 0, 8)) %>%
   dplyr::select(-contains('Index')) %>% 
   distinct()
 
+# 1f Add temperature values
+# here we assign some temperature values to create a fake effect
+# we also put adate in the same format as in the real UTI data 
 cases <- cases %>% 
   inner_join(temper, by = c('fips', 'adate')) %>% 
   mutate(tmeanLag1 = lag(tmean, 1), 
          tmeanLag2 = lag(tmean, 2),
          tmeanLag3 = lag(tmean, 3),
-         tmeanLag4 = lag(tmean, 4))
+         tmeanLag4 = lag(tmean, 4),
+         tmeanLag4 = lag(tmean, 4),
+         tmeanLag4 = lag(tmean, 4),
+         tmeanLag4 = lag(tmean, 4),
+         tmeanLag4 = lag(tmean, 4)) %>% 
+  mutate(adate = paste0(str_pad(month(adate0),2, 'left', '0'), 
+                        str_pad(day(adate0),2, 'left', '0'), year(adate0))) 
   
-# 1d Create case counts variable
+# 1g Create case counts variable
+# including a fake effect 
 set.seed(1234)
-cases$case_count <- floor(rnorm(nrow(cases), 10 + 0.25*cases$tmean + 
-                                  0.5*cases$tmeanLag1+ 0.25*cases$tmeanLag2 + 
-                                  0.1*cases$tmeanLag3+ 0.05*cases$tmeanLag4, 2))
-
-cases <- cases %>% 
+cases$case_count <- floor(rnorm(nrow(cases), 20 + 0.015*cases$tmean + 
+                                  0.005*cases$tmeanLag1+ 0.002*cases$tmeanLag2 + 
+                                  0.001*cases$tmeanLag3+ 0.0005*cases$tmeanLag4, 2)) %>% 
+  mutate(case_count = if_else(case_count < 0, 20, case_count)) %>%
   dplyr::select(-tmean, -avgrelhum) %>% 
   filter(complete.cases(cases))
 
-# add some zero dates 
-cases <- cases %>% mutate(case_count = if_else(case_count <9, 0, case_count))
+# 1h Add some dates with zero UTI
+cases <- cases %>% 
+  mutate(case_count = if_else(row_number() == 111, 0, case_count))
 
-# remove the zero cases 
+# 1i Remove the zero cases 
 cases <- cases %>% 
   filter(case_count != 0)
 
-# 1f Add sutter county variable 
+# 1j Add sutter county variable 
 cases <- cases %>% 
-  mutate(sutter_county = if_else(fips == 6004, "sutter county", "not sutter"))
+  mutate(sutter_county = if_else(fips == 6041, "sutter", "kpsc"))
 
-# 1g Add counts of female UTI
+# 1k Add counts of female UTI and other modifiers 
 cases <- cases %>% 
-  mutate(case_count_sex_f = abs(case_count - 2))
+  mutate(case_count_sex_f = abs(case_count - 2), 
+         case_count_low_ice = abs(case_count_sex_f / 2), 
+         case_count_medicaid = abs(case_count_sex_f / 2))
 
-# 1h Save data 
+# 1l Save data 
 cases %>% 
-  write_fst(here::here('data', 'intermediateData', 
-                                  'cases_fake.fst'))
+  dplyr::select(fips, adate, sutter_county, case_count, case_count_sex_f, 
+                case_count_low_ice,
+                case_count_medicaid) %>%
+  write_csv(here::here('data', 'intermediate', 
+                                  'combined_cases_fake.csv'))
 
-# 1i Cleanup 
+# 1m Cleanup 
 rm(activeFIPs, nDays, cases)
