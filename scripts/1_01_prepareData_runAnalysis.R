@@ -25,8 +25,9 @@
 ####********************
 
 # 0a Create the folder structure, load packages, etc, if you haven't already
+# here:here is helpful for file directories
 if (!exists("ran_0_01")) {
-  here::i_am("README.md")
+  here::i_am("README.md") 
   source(here::here("scripts", "0_01_setUp_for_analysis.R"))
 }
 
