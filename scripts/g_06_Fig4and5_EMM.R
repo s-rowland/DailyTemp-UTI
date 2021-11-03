@@ -37,7 +37,7 @@ if (!exists("ran_0_01")) {
 
 # 0b Create the plotting objects, if you haven't already
 if (!exists("ran_g_01")) {
-  source(here::here("scripts", "f_01_set_PlottingObjects.R"))
+  source(here::here("scripts", "g_01_set_plottingObjectsManuscript.R"))
 }
 
 ####************************************
@@ -153,11 +153,13 @@ plot_ERCurve_perLag_2Mods <- function(sensitivityA, subSetVarA, subSetA, ERConst
   #### 1B: Make Plot ####
   ####*******************
   
-  # 1B.a Set the colors
-  if (sensitivityB == "main") {
+  if (subSetVarA == 'catchmentArea' & subSetVarB == 'catchmentArea') {
+    colSet <- colorArray$catchmentArea
+  } else if (subSetVarA == 'ice' & subSetVarB == 'ice') {
+    colSet <- colorArray$ICE
+  } else if (sensitivityB == "main") {
     colSet <- colorArray$modContrast
-  }
-  if (sensitivityB != "main") {
+  } else if (sensitivityB != "main") {
     colSet <- colorArray$modContrastGhost
   }
   
@@ -169,9 +171,9 @@ plot_ERCurve_perLag_2Mods <- function(sensitivityA, subSetVarA, subSetA, ERConst
     textLabel <- "A"
   }
   if (subSetVarA == "ice") {
-    legendTitle <- "Tract-Level \nPoverty"
+    legendTitle <- "ICE-Income"
     est.table <- est.table %>%
-      mutate(mod_comp = if_else(mod_comp == "iceLow", "High", "Low"))
+      mutate(mod_comp = if_else(mod_comp == "iceLow", "Low ICE-I", "High ICE-I"))
     textLabel <- "B"
   }
   
@@ -311,7 +313,7 @@ plot_LRCurve_perExposure_2Mods <- function(sensitivityA, subSetVarA, subSetA, ER
   if (subSetVarA == "ice") {
     legendTitle <- "Tract-Level\n Poverty"
     est.table <- est.table %>%
-      mutate(mod_comp = if_else(mod_comp == "iceLow", "High", "Low"))
+      mutate(mod_comp = if_else(mod_comp == "iceLow", "Low ICE-I", "High ICE-I"))
   }
 
   # 2A.g Isolate to whole-number lags
@@ -343,10 +345,13 @@ plot_LRCurve_perExposure_2Mods <- function(sensitivityA, subSetVarA, subSetA, ER
   ####*******************
 
   # 2B.a Set the colors
-  if (sensitivityB == "main") {
+  if (subSetVarA == 'catchmentArea' & subSetVarB == 'catchmentArea') {
+    colSet <- colorArray$catchmentArea
+  } else if (subSetVarA == 'ice' & subSetVarB == 'ice') {
+    colSet <- colorArray$ICE
+  } else if (sensitivityB == "main") {
     colSet <- colorArray$modContrast
-  }
-  if (sensitivityB != "main") {
+  } else if (sensitivityB != "main") {
     colSet <- colorArray$modContrastGhost
   }
 

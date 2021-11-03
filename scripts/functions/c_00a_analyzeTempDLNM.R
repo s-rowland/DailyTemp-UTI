@@ -81,8 +81,7 @@ analyzeTempDLNM <- function(sensitivity, subSetVar, subSet,
     mutate(ADMDateTime = adate)
     #mutate(ADMDateTime = parse_date_time(adate, 'ymd', tz = 'America/Los_Angeles'))
   
-  # 2b Here I am making random variables for testing
-  # not used for manuscript
+  # 2b Here I make date variables
   minDateTime = min(dta$ADMDateTime)
   dta <- dta %>% 
     mutate(day_index = as.numeric(ADMDateTime - minDateTime, 'days'))
