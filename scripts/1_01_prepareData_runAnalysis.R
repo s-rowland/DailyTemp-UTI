@@ -60,6 +60,7 @@ source(here::here("scripts", "a_03_assignExposure_matchDays.R"))
 # 2a Conduct main analyses
 source(here::here("scripts", "c_01_fit_mainModel.R"))
 source(here::here("scripts", "c_02_fit_EMMmodels.R"))
+source(here::here("scripts", "c_03_fit_EMMmodels_fallOnly.R"))
 
 # 2b Conduct sensitivity analyses
 source(here::here("scripts", "d_01_fit_sensitivityAnalyses.R"))
@@ -86,7 +87,9 @@ source(here::here("scripts", "g_09_eTable3_mainEffectEstimates.R"))
 source(here::here("scripts", "g_10_eFig2_UTI_timingDistribution.R"))
 source(here::here("scripts", "g_11_eFig3_sensitivity_forestPlot.R"))
 source(here::here("scripts", "g_12_eFig4and5_sensitivity_lagRwithGhost.R"))
-source(here::here("scripts", "g_13_numbers_for_Results.R"))
+source(here::here("scripts", "g_13_Fig4and5_EMM_fallOnly.R"))
+source(here::here("scripts", "g_14_Fig2_LagR_Ind_Cumul_fallOnly.R"))
+source(here::here("scripts", "g_15_numbers_for_Results.R"))
 
 # 3b Tell the analyst that the analysis is done
 toc()

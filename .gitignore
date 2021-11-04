@@ -13,10 +13,11 @@ data/intermediate/combined_cases_UTI.csv
 
 # Code not used for the manuscript
 scripts/depreciated
-scripts/b*
-scripts/e*
-scripts/f*
-scripts/z*
+scripts/not_in_manuscript
+scripts/b
+scripts/e
+scripts/f
+scripts/z
 
 # Results from simulation studies (not shared)
 outputsFake_analyst_*
