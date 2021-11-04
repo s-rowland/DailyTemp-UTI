@@ -48,7 +48,7 @@ if (outcomeName == "UTI") {
 }
 if (outcomeName == "fake") {
   source(here::here("scripts", "a_01b_generate_fakeTemp_forCodePrep.R"))
-  source(here::here("scripts", "a_02b_generate_fakeCases_forCodePrep.R"))
+  source(here::here("scripts", "a_02b_generate_fakeCases_forCodePrep.R")) #vdo comment: trouble here
 }
 # we assign exposure the same way regardless of real or fake data
 source(here::here("scripts", "a_03_assignExposure_matchDays.R"))
@@ -80,16 +80,16 @@ source(here::here("scripts", "g_01_set_plottingObjectsManuscript.R"))
 source(here::here("scripts", "g_03_Fig1_expR_first4EvenLags.R"))
 source(here::here("scripts", "g_04_Fig2_LagR_Ind_Cumul.R"))
 source(here::here("scripts", "g_05_Fig3_seasonal_ER.R"))
-source(here::here("scripts", "g_06_Fig4and5_EMM.R"))
+source(here::here("scripts", "g_06_Fig4and5_EMM.R")) #vdo comment: trouble here
 source(here::here("scripts", "g_07_eTable1_TempDistribution.R"))
-source(here::here("scripts", "g_08_eTable2_modelAIC.R"))
-source(here::here("scripts", "g_09_eTable3_mainEffectEstimates.R"))
+source(here::here("scripts", "g_08_eTable2_modelAIC.R")) #vdo comment: trouble here
+source(here::here("scripts", "g_09_eTable3_mainEffectEstimates.R")) #vdo comment: trouble here
 source(here::here("scripts", "g_10_eFig2_UTI_timingDistribution.R"))
 source(here::here("scripts", "g_11_eFig3_sensitivity_forestPlot.R"))
 source(here::here("scripts", "g_12_eFig4and5_sensitivity_lagRwithGhost.R"))
 source(here::here("scripts", "g_13_Fig4and5_EMM_fallOnly.R"))
 source(here::here("scripts", "g_14_Fig2_LagR_Ind_Cumul_fallOnly.R"))
-source(here::here("scripts", "g_15_numbers_for_Results.R"))
+source(here::here("scripts", "g_15_numbers_for_Results.R")) #vdo comment: trouble here
 
 # 3b Tell the analyst that the analysis is done
 toc()
