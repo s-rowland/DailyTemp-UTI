@@ -87,7 +87,8 @@ cases <- cases %>%
 set.seed(1234)
 cases$case_count <- floor(rnorm(nrow(cases), 20 + 0.015*cases$tmean + 
                                   0.005*cases$tmeanLag1+ 0.002*cases$tmeanLag2 + 
-                                  0.001*cases$tmeanLag3+ 0.0005*cases$tmeanLag4, 2)) %>% 
+                                  0.001*cases$tmeanLag3+ 0.0005*cases$tmeanLag4, 2))  
+cases <- cases %>%  
   mutate(case_count = if_else(case_count < 0, 20, case_count)) %>%
   dplyr::select(-tmean, -avgrelhum) %>% 
   filter(complete.cases(cases))
