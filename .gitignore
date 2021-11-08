@@ -9,6 +9,8 @@
 **/*.fst
 data/prepared
 data/intermediate/combined_cases_UTI.csv
+data/intermediate/combined_cases_UTI_aug2021.csv
+data/intermediate/weighted_area_raster_fips_tmean_daily_2014.rds
 
 # Code not used for the manuscript
 scripts/depreciated
