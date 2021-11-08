@@ -49,8 +49,8 @@ user <- "Analyst"
 # reproducibility.
 # Ideally both the analyst and the reviewer run the code with the fake data
 # and compare results to confirm reproducibility
-# outcomeName <- 'UTI'
- outcomeName <- "fake"
+outcomeName <- 'UTI'
+# outcomeName <- "fake"
 
 ####**********************
 #### 1: Load Packages ####

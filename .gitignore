@@ -10,7 +10,6 @@
 data/prepared
 data/intermediate/combined_cases_UTI.csv
 
-
 # Code not used for the manuscript
 scripts/depreciated
 scripts/not_in_manuscript
