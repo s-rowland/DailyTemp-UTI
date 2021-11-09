@@ -173,7 +173,7 @@ plot_ERCurve_perLag_2Mods <- function(sensitivityA, subSetVarA, subSetA, ERConst
   if (subSetVarA == "ice") {
     legendTitle <- "ICE-Income"
     est.table <- est.table %>%
-      mutate(mod_comp = if_else(mod_comp == "iceLow", "Low ICE-I", "High ICE-I"))
+      mutate(mod_comp = if_else(mod_comp == "iceQ1", "ICE-I Q1", "ICE-I Q2-4"))
     textLabel <- "B"
   }
   
@@ -313,7 +313,7 @@ plot_LRCurve_perExposure_2Mods <- function(sensitivityA, subSetVarA, subSetA, ER
   if (subSetVarA == "ice") {
     legendTitle <- "Tract-Level\n Poverty"
     est.table <- est.table %>%
-      mutate(mod_comp = if_else(mod_comp == "iceLow", "Low ICE-I", "High ICE-I"))
+      mutate(mod_comp = if_else(mod_comp == "iceQ1", "ICE-I Q1", "ICE-I Q2-4"))
   }
 
   # 2A.g Isolate to whole-number lags
@@ -438,14 +438,14 @@ dev.off()
 
 # 3c Create plots models stratified by ICE category 
 TP.ER.ice <- plot_ERCurve_perLag_2Mods(
-  "main", "ice", "iceLow", "selectedMain", "selectedMain",
-  "main", "ice", "iceHigh", "selectedMain", "selectedMain",
+  "main", "ice", "iceQ1", "selectedMain", "selectedMain",
+  "main", "ice", "iceQ234", "selectedMain", "selectedMain",
   "0_100", 0
 )
 
 TP.LR.ice <- plot_LRCurve_perExposure_2Mods(
-  "main", "ice", "iceLow", "selectedMain", "selectedMain",
-  "main", "ice", "iceHigh", "selectedMain", "selectedMain",
+  "main", "ice", "iceQ1", "selectedMain", "selectedMain",
+  "main", "ice", "iceQ234", "selectedMain", "selectedMain",
   c("per05", "mean"), "Point"
 )
 

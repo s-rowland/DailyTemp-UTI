@@ -66,8 +66,8 @@ col.modA <- "darkorchid1"
 col.modB <- "burlywood4"
 col.modMain <- "orange"
 col.modGhost <- "grey73"
-col.iceLow <- 'springgreen4'
-col.iceHigh <- 'tan2'
+col.iceQ1 <- 'springgreen4'
+col.iceQ234 <- 'tan2'
 
 # 1d Set order of colors
 # this is used in the scale_manual step of the plot
@@ -79,7 +79,7 @@ colorArray <- list(
   tempContrast = c(col.cold, col.hot),
   modContrast = c(col.modA, col.modB),
   catchmentArea = c(col.modA, col.modB),
-  ICE = c(col.iceLow, col.iceHigh),
+  ICE = c(col.iceQ1, col.iceQ234),
   modContrastGhost = c(col.modGhost, col.cold)
 )
 

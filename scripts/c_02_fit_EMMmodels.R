@@ -101,10 +101,10 @@ fitModelWithSelectedMainConstraints("main", "catchmentArea", "sutter")
 ####***********************
 
 # 4a Fit model with UTI of subjects from lowICE tracts
-fitModelWithSelectedMainConstraints("main", "ice", "iceLow")
+fitModelWithSelectedMainConstraints("main", "ice", "iceQ1")
 
 # 4a Fit model with UTI of subjects from highICE tracts
-fitModelWithSelectedMainConstraints("main", "ice", "iceHigh")
+fitModelWithSelectedMainConstraints("main", "ice", "iceQ234")
 
 # 4c Tell the analyst that the emm models are done
 toc()

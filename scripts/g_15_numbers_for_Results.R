@@ -111,7 +111,7 @@ b.6.EEfig2caption2 <- est.table$estCumul_16.4[2]
 # 2a Setup table of models to tabulate
 sensitivityList <- rep("main", 8)
 subSetVarList <- c(rep("catchmentArea", 4), rep("ice", 4))
-subSetList <- c(rep("kpsc", 2), rep("sutter", 2), rep("iceLow", 2), rep("iceHigh", 2))
+subSetList <- c(rep("kpsc", 2), rep("sutter", 2), rep("iceQ1", 2), rep("iceQ234", 2))
 ERConstraintList <- rep("selectedMain", 8)
 LRConstraintList <- rep("selectedMain", 8)
 indCumulList <- rep(c("estInd", "estCumul"), 4)
@@ -169,20 +169,20 @@ est.table <- est.table %>%
 # 2h Extract values of interest
 c.1.EEper05toMeanInd14kpsc <- est.table$estCumul_16.4_kpsc[14]
 c.2.EEper05toMeanInd14Sutter <- est.table$estCumul_16.4_sutter[14]
-c.3.EEper05toMeanInd14iceLow <- est.table$estCumul_16.4_iceLow[14]
-c.4.EEper05toMeanInd14iceHigh <- est.table$estCumul_16.4_iceHigh[14]
+c.3.EEper05toMeanInd14iceQ1 <- est.table$estCumul_16.4_iceQ1[14]
+c.4.EEper05toMeanInd14iceQ234 <- est.table$estCumul_16.4_iceQ234[14]
 
 # 2i Save numeric results 
 data.frame(quantity = c(
   'b.1.EEper05toMeanInd0', 'b.2.EEmeanto95Ind0', 'b.3.EEper05toMeanCumul14',
   'b.4.EEmeanto95Cumul14', 'b.5.EEfig2caption1', 'b.6.EEfig2caption2', 
   'c.1.EEper05toMeanInd14kpsc', 'c.2.EEper05toMeanInd14Sutter', 
-  'c.3.EEper05toMeanInd14iceLow', 'c.4.EEper05toMeanInd14iceHigh'), 
+  'c.3.EEper05toMeanInd14iceQ1', 'c.4.EEper05toMeanInd14iceQ234'), 
            value = c(
              b.1.EEper05toMeanInd0, b.2.EEmeanto95Ind0, b.3.EEper05toMeanCumul14, 
              b.4.EEmeanto95Cumul14, b.5.EEfig2caption1, b.6.EEfig2caption2, 
              c.1.EEper05toMeanInd14kpsc, c.2.EEper05toMeanInd14Sutter, 
-             c.3.EEper05toMeanInd14iceLow, c.4.EEper05toMeanInd14iceHigh)) %>% 
+             c.3.EEper05toMeanInd14iceQ1, c.4.EEper05toMeanInd14iceQ234)) %>% 
   write_csv(here::here(outPath, "manuscript", 'numeric_results.csv'))
   
 
