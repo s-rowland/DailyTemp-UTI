@@ -187,7 +187,7 @@ plot_ERCurve_perLag_2Mods <- function(sensitivityA, subSetVarA, subSetA, ERConst
     geom_ribbon(aes(ymin = lci_pc, ymax = uci_pc, fill = mod_comp), alpha = 0.2) +
     geom_line(aes(y = fit_pc, color = mod_comp)) +
     labs(
-      x = expression(Observed ~ Daily ~ Temperature ~ (degree * C)),
+      x = expression(Same~-Day ~ Temperature ~ (degree * C)),
       y = paste0("Change in UTI \n Diagnosis Rate (%)"),
       fill = legendTitle, color = legendTitle
     ) +
