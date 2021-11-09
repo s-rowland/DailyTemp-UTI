@@ -95,7 +95,7 @@ est.table <- est.table %>%
   dplyr::select(lag_day, contains("Ind"), contains("Cumul"))
 
 # 1i Get the values of interest
-# note that the oclumn names will be different for the synthetic data because the 
+# note that the column names will be different for the synthetic data because the 
 # fake temperature has a different distribution
 b.1.EEper05toMeanInd0 <- est.table$estInd_16.4[1]
 b.2.EEmeanto95Ind0 <- est.table$estInd_27.3[1]

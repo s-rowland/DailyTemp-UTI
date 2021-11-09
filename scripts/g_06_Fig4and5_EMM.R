@@ -46,7 +46,7 @@ if (!exists("ran_g_01")) {
 
 # 1a Name function 
 plot_ERCurve_perLag_2Mods <- function(sensitivityA, subSetVarA, subSetA, ERConstraintA, LRConstraintA,
-                                      sensitivityB, subSetVarB, subSetB, ERConstraintB, LRConstraintB, expRange, activeLag) {
+                                      sensitivityB, subSetVarB, subSetB, ERConstraintB, LRConstraintB, expRange, refT, activeLag) {
   # sensitivityA <- 'main' ; subSetVarA <- 'fullSet'; subSetA <- 'fullSet'
   # ERConstraintA <- 'selected'; LRConstraintA <- 'selected'
   # sensitivityB <- 'FandM' ; subSetVarB <- 'fullSet'; subSetB <- 'fullSet'
@@ -74,7 +74,7 @@ plot_ERCurve_perLag_2Mods <- function(sensitivityA, subSetVarA, subSetA, ERConst
   
   # 1A.c Isolate the relevant exposure constrats
   est.table <- est.table %>%
-    filter(refT == contrast[1][[1]])
+    filter(refT == !!refT)
   
   # 1A.d Determine type of contrast
   if (sensitivityA != sensitivityB) {
@@ -338,7 +338,7 @@ plot_LRCurve_perExposure_2Mods <- function(sensitivityA, subSetVarA, subSetA, ER
 
   # 2A.h Set range of y-axis
   est.min <- -1
-  est.max <- 4
+  est.max <- 5
 
   ####*******************
   #### 2B: Make Plot ####
@@ -414,7 +414,7 @@ plot_LRCurve_perExposure_2Mods <- function(sensitivityA, subSetVarA, subSetA, ER
 TP.ER.catchment <- plot_ERCurve_perLag_2Mods(
   "main", "catchmentArea", "sutter", "selectedMain", "selectedMain",
   "main", "catchmentArea", "kpsc", "selectedMain", "selectedMain",
-  "0_100", 0
+  "0_100", "per05", 0
 )
 TP.LR.catchment <- plot_LRCurve_perExposure_2Mods(
   "main", "catchmentArea", "sutter", "selectedMain", "selectedMain",
@@ -440,7 +440,7 @@ dev.off()
 TP.ER.ice <- plot_ERCurve_perLag_2Mods(
   "main", "ice", "iceQ1", "selectedMain", "selectedMain",
   "main", "ice", "iceQ234", "selectedMain", "selectedMain",
-  "0_100", 0
+  "0_100", "per05",  0
 )
 
 TP.LR.ice <- plot_LRCurve_perExposure_2Mods(

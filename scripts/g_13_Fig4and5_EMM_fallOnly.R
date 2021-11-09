@@ -430,7 +430,7 @@ TP.LR.catchment <- plot_LRCurve_perExposure_2Mods(
 # 3b Print plots 
 png(here::here(
   outPath, "plots",
-  paste0("Fig4_compareLagR_", "catchmentArea", "_Fall_Only.png")
+  paste0("eFig5_compareLagR_", "catchmentArea", "_Fall_Only.png")
 ),
 width = ww.fig * 2, height = hh.fig * 0.75, res = rr.fig * 1
 )
@@ -457,7 +457,7 @@ TP.LR.ice <- plot_LRCurve_perExposure_2Mods(
 # 3d Print plots
 png(here::here(
   outPath, "plots",
-  paste0("Fig5_compareLagR_", "ice", "_Fall_Only.png")
+  paste0("eFig6_compareLagR_", "ice", "_Fall_Only.png")
 ),
 width = ww.fig * 2, height = hh.fig * 0.75, res = rr.fig * 1
 )

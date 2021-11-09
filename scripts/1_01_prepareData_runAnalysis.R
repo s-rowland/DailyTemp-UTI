@@ -42,9 +42,10 @@ tic("Analysis and plotting completed.")
 # We run generate fake data if we are doing a code review
 # the fake data means that any reviewer would get the same effect estimates
 # and the reviewer can run the code on a computer outside of the Sutter system
+# a_01a and a_02a are only run on the computer that has access to the de-identified data
 if (outcomeName == "UTI") {
-  source(here::here("scripts", "a_01a_prepare_tempData.R"))
-  source(here::here("scripts", "a_02a_identifyCases.R"))
+  #source(here::here("scripts", "a_01a_prepare_tempData.R"))
+  #source(here::here("scripts", "a_02a_identifyCases.R"))
 }
 if (outcomeName == "fake") {
   source(here::here("scripts", "a_01b_generate_fakeTemp_forCodePrep.R"))
