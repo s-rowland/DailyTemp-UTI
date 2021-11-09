@@ -224,6 +224,7 @@ dtaAssignedTemp <- dtaAssignedTemp %>%
 #### 5: Save Data ####
 ####******************
 
+#vdo comment: reminder to remove the Jan 2015 temporary step
 #### TEMPORARY STEP: REMOVE JAN 2015 ### 
 # this step should be remove in the final version of the code, but first we 
 # need updated temperature dataset

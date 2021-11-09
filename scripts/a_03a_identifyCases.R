@@ -60,7 +60,7 @@ sut_reg_case2 <- sut_reg_case2 %>%
   mutate(fips = as.numeric(as.character(county)))
 
 kpsc_reg_case2 <- kpsc_reg_case2 %>%
-  mutate(fips = county + 6000)
+  mutate(fips = county + 6000) #vdo comment: why are we adding 6000 to the counties?
 
 # 1d Restrict the sut_cases to the Sutter catchement
 # and KPSC to not include Sutter catchment
