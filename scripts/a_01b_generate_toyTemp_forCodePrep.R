@@ -1,4 +1,4 @@
-# Create Fake Temperature Data for Code Testing
+# Create Toy Temperature Data for Code Testing
 # Data Preparation
 # Daily Temperature-UTI Project
 # Joan Casey & Sebastian T. Rowland
@@ -10,15 +10,15 @@
 
 # N: Notes
 # 0: Preparation
-# 1: Create Fake Temperature Data
+# 1: Create Toy Temperature Data
 
 ####**************
 #### N: Notes ####
 ####**************
 
 # Na Description
-# The goal of this script is to create a fake dataset for reproducibility testing
-# this fake dataset should have a null association between temp and UTI
+# The goal of this script is to create a toy dataset for reproducibility testing
+# this toy dataset should have a slight positive association between temp and UTI
 
 ####********************
 #### 0: Preparation ####
@@ -34,11 +34,12 @@ if (!exists("ran_0_01")) {
 set.seed(1234)
 
 ####*************************************
-#### 1: Create Fake Temperature Data ####
+#### 1: Create Toy Temperature Data ####
 ####*************************************
 
-# 1a Set number of years of fake data
-nDays <- 365 + 366 + 365
+# 1a Set number of years of toy data
+# str: added an extra year's worth of days
+nDays <- 365 + 365 + 366 + 365
 
 # 1b Create a vector of fips Codes
 activefips <- c(6001, 6003, 6005, 6006, 6008, 6009, 6041)
@@ -54,8 +55,9 @@ temper <- expand_grid(
 # I prefer to keep a column of the date as a string,
 # because sometime excel will autocorrect dates to whatever excel thinks is the
 # right interpretation.
+# str: now temperature data starts at 1998
 temper <- temper %>%
-  mutate(adate = parse_date_time("1/1/1999", "mdy", tz = "America/Los_Angeles") +
+  mutate(adate = parse_date_time("1/1/1998", "mdy", tz = "America/Los_Angeles") +
     dIndex * 60 * 60 * 24) %>%
   mutate(adate = str_sub(str_remove_all(adate, "-"), 0, 8))
 
@@ -72,7 +74,7 @@ temper$avgrelhum <- rnorm(nrow(temper), 0, 10)
 temper %>%
   write_fst(here::here(
     "data", "intermediate",
-    "fake_weather.fst"
+    "toy_weather.fst"
   ))
 
 # 1h Clean up environment

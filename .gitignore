@@ -21,8 +21,8 @@ scripts/f
 scripts/z
 
 # Results from simulation studies (not shared)
-outputsFake_analyst_*
 outputs_exploreLinear
+outputsFake*
 
 # Results for manuscript (not shared)
 outputs*

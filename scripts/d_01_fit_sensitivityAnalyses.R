@@ -58,29 +58,18 @@ fitModelWithSelectedMainConstraints("noRH", "fullSet", "fullSet")
 # 2b Fit RH DLNM model
 fitModelWithSelectedMainConstraints("RHdlnm", "fullSet", "fullSet")
 
-## code if we want to select constraints for each sensitivity analysis ##
-# 2a.i Perform grid search to identify optional constraints
-# performGridSearch(candidateConstraintsGrid, 'noRH', 'fullSet', 'fullSet')
-# 2a.ii Get estimates from model with selected constraints
-# identifySelectedConstraints_fitModel('noRH', 'fullSet', 'fullSet')
-
-# 2b fit RH dlnm model
-# 2b.i Perform grid search to identify optional constraints
-# performGridSearch(candidateConstraintsGrid, 'RHdlnm', 'fullSet', 'fullSet')
-# 2b.ii Get estimates from model with selected constraints
-# identifySelectedConstraints_fitModel('RHdlnm', 'fullSet', 'fullSet')
-
 ####**********************************
 #### 3: Fit Alternative Lag Model ####
 ####**********************************
 
+# For 21 day lag, we re-select the constraints because we have a different cross-basis
 # 3a Make grid of potential parameters we will then evaluate
 candidateConstraintsGrid <- expand_grid(
   ERConstraint = c("3dfEvenKnots", "4dfEvenKnots", "5dfEvenKnots"),
   LRConstraint = c("3dfLogKnots", "4dfLogKnots")
 )
 
-# 3b fit 21 day lag model
+# 3b Fit 21 day lag model
 # 3b.i Perform grid search to identify optional constraints
 performGridSearch(candidateConstraintsGrid, "21DayLag", "fullSet", "fullSet")
 # 3b.ii Get estimates from model with selected constraints
@@ -90,7 +79,7 @@ identifySelectedConstraintsFitModel("21DayLag", "fullSet", "fullSet")
 #### 4: Fit Female-and-Male Model ####
 ####**********************************
 
-# 4a Mixed gender model
+# 4a Model with female and male cases
 fitModelWithSelectedMainConstraints("FandM", "fullSet", "fullSet")
 
 # 4b Tell the analyst that you are done

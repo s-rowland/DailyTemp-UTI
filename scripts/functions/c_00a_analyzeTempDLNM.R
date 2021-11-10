@@ -17,7 +17,7 @@
 # 5: Create Crossbasis
 # 6: Fit Health Model 
 # 7: Save Results
-  # 7A: Save Model AIC
+  # 7A: Save Model QAIC
   # 7B: Save Model Results
 
 ####**************
@@ -27,17 +27,39 @@
 # Na Description
 # This code is the function for fitting all of the models 
 # for the analysis 
-# except for the negative control exposure sensitivity analysis 
-# By using the same code, we can ensure that the exact same dataprocessing 
+# By using the same code, we can ensure that the exact same data processing 
 # and output is applied to each model, 
 # without updating many individual codes 
-# The code outputs a) the model, b) estimate for the mean to 10th and 90th percentile 
-# c) for penalized spline models only, an ER plot.
+# The function outputs with the QAIC of the model or the model and its effect estimates
 
 # Nb modelName 
 # A critical object in this project is the modelName 
 # This identifiers provides all the unique information about a model 
 # When you look a file name, you know exactly what the model is about
+
+# Model Parameters: 
+# sensitivity: whether we are doing the main analysis or a sensitivity analysis 
+#              'main': main analysis 
+#              'noRH': model without RH adjustment 
+#              'RHdlnm': Model adjusting for 14-day RH as a DLNM
+#              '21DayLag': Model with a 21-day crossbasis for temperature 
+#             'FandM': Model including male and female cases 
+# subSetVar: The variable upon which we are subsetting 
+#           'fullset': no subsetting 
+#           'season': 3-month season 
+#           'catchmentArea': health care system catchment area 
+#           'ice': category of Index of Concentration of Extremes - Income 
+# subSet: The category we keep for analysis 
+#         'fullset': not subsetting 
+#         fall/win/spr/sum: 4 seasons 
+#         'kpsc/sutter: Kaiser Permanente or Sutter Health 
+#         iceQ1 / iceQ234: bottom quartile of ICE or top 3 quartiles 
+# ERConstraint: Constraint for exposure-response dimension 
+# LRConstraint: Constraint for lag-response dimension 
+# saveModel: what kind of output do you want? 
+#           'saveQAIC': Save the QAIC in the QAIC table 
+#           'saveModel': Save the model in the models folder and effect estimates
+#                       in the estimates folder
 
 ####********************
 #### 0: Preparation #### 
@@ -53,17 +75,17 @@ analyzeTempDLNM <- function(sensitivity, subSetVar, subSet,
    
   # sensitivity <- 'main'; 
   # ERConstraint <- '3dfEvenKnots'; LRConstraint <- '3dfLogKnots';
-  # subSetVar <- 'fullSet'; subSet <- 'fullSet';  saveModel <- 'saveAIC'
+  # subSetVar <- 'fullSet'; subSet <- 'fullSet';  saveModel <- 'saveQAIC'
   
   #sensitivity <- 'explor'; 
   #ERConstraint <- '3dfEvenKnots'; LRConstraint <- '3dfLogKnots';
-  #subSetVar <- 'catchementArea'; subSet <- 'kpsc';  saveModel <- 'saveAIC'
+  #subSetVar <- 'catchementArea'; subSet <- 'kpsc';  saveModel <- 'saveQAIC'
   
 # set this instead to test subSetting by a patient characteristic
-  # subSetVar <- 'medicaid'; subSet <- 'medicaid';  saveModel <- 'saveAIC'
+  # subSetVar <- 'medicaid'; subSet <- 'medicaid';  saveModel <- 'saveQAIC'
   
   # set this instead to test subSetting by a time-varying characteristic
-  # subSetVar <- 'season'; subSet <- 'sum';  saveModel <- 'saveAIC'
+  # subSetVar <- 'season'; subSet <- 'sum';  saveModel <- 'saveQAIC'
   
   # 1b Create modelName 
   modelName <- paste(sensitivity, subSetVar, subSet, 
@@ -98,6 +120,11 @@ analyzeTempDLNM <- function(sensitivity, subSetVar, subSet,
         DoW %in% c(6, 7) ~ 'wknd')) %>% 
     dplyr::select(-MM, DoW)
   
+  # 2c Update the meanRH variable for 21DayLag Sensitivity analysis
+  # note that this only changes the meanRH variable within the function's environment; 
+  # it does not change the meanRH variable in the actual dta in our environment. 
+  if(sensitivity == '21DayLag') {dta <- dta %>% mutate(meanRH = meanRH21)}
+  
   ####****************************************************************
   #### 3: Ascertain Cases and Stratify by Patient Characteristics ####
   ####****************************************************************
@@ -125,9 +152,11 @@ analyzeTempDLNM <- function(sensitivity, subSetVar, subSet,
     countVar = paste0('case_count_', subSetVar, '_', subSet)
     dta$outcome_count <- dta[, countVar]
   }
-  # special female-only sensitivity analyses so that we can examine the effect #vdo comment: is this description accurate? We are looking at female & male here; also wasn't the study pop limited to female only?
-  # of restricting to females when doing effect modification
-  if(sensitivity == 'FandM'){
+  # sensitivity analyses of including male cases 
+   #vdo comment: is this description accurate? We are looking at female & male here; also wasn't the study pop limited to female only?
+ # str: added explanatory comment. The main study population was restricted to females, 
+  # but we also consider males in this sensitivity analysis 
+    if(sensitivity == 'FandM'){
     dta <- dta %>% 
       mutate(outcome_count = case_count)
   }
@@ -228,6 +257,8 @@ analyzeTempDLNM <- function(sensitivity, subSetVar, subSet,
   # 6a Fit Main Model
   # note that we can change the distribution family to poisson if the dispersion 
   # factor is 1.
+  # in the final model, the dispersion factor is 1.1, so we stick with quasi-poisson, 
+  # although the over-disperion is not much
       mod <- gnm(outcome_count ~ cb.temp + meanRH, 
              family = quasipoisson(link= 'log'), 
              data = dta, 
@@ -235,7 +266,9 @@ analyzeTempDLNM <- function(sensitivity, subSetVar, subSet,
  
   
   # 6b Fit alternative models
-  # this is just an example to show what it would look like. #vdo comment: even though it's an example, you do end up using it in as a sensitivity analyses no? The comment is a bit misleading and implies the below is unimportant
+
+  #vdo comment: even though it's an example, you do end up using it in as a sensitivity analyses no? The comment is a bit misleading and implies the below is unimportant
+ # str: agreed; removed comment
   if(sensitivity == 'noRH'){
     mod <- gnm(outcome_count ~ cb.temp, 
                family = quasipoisson(link= 'log'), 
@@ -258,21 +291,25 @@ analyzeTempDLNM <- function(sensitivity, subSetVar, subSet,
   #### 7: Save Results ####
   ####*********************
   
-  ####************************
-  #### 7A: Save Model AIC ####
-  ####************************
+  ####*************************
+  #### 7A: Save Model QAIC ####
+  ####*************************
   
   # 7A.a Begin option
-  # when we do the grid search, we want to just save the model's AIC and not its results
-  if(saveModel == 'saveAIC'){
+  # when we do the grid search, we want to just save the model's QAIC and not its results
+  if(saveModel == 'saveQAIC'){
     
-    # 7A.b Readin the table of AIC's
-    aic.table <- read_csv(here::here(outPath, 'tables', 
-                                      'Model_AIC.csv'), col_types = 'cccccdcT')
+    # 7A.b Readin the table of QAIC's
+    qaic.table <- read_csv(here::here(outPath, 'tables', 
+                                      'Model_QAIC.csv'), col_types = 'cccccdcT')
     
     # 7A.c Calculate QAIC
     # 7A.c.i Make a version of the quasipoisson distribution that includes the AIC 
-    # that you would get if the distribution were poission #vdo comment: what you're doing here is clear, but could you clarify the why? ie - why can't we directly calculate the qaic right off the bat? This comes from my personal lack of understanding/remembering AIC for poisson and QAIC for quasipoisson
+    # the gnm() function will not directly compute QAIC, so we compute QAIC 
+    # following the procedure recommended by the MuMIn package documentation
+    # that you would get if the distribution were poission 
+    #vdo comment: what you're doing here is clear, but could you clarify the why? ie - why can't we directly calculate the qaic right off the bat? This comes from my personal lack of understanding/remembering AIC for poisson and QAIC for quasipoisson
+    # str: added explanatory comment
     x.quasipoisson <- function(...) {
       res <- quasipoisson(...)
       # This line is telling R to compute AIC for quasipoission
@@ -288,19 +325,19 @@ analyzeTempDLNM <- function(sensitivity, subSetVar, subSet,
     #with(object,sum((weights * residuals^2)[weights > 0])/df.residual)
     
     # 7A.d Add this aic to the set of AIC's
-    aic.table[1+nrow(aic.table),] <- list(sensitivity, subSetVar, subSet,
+    qaic.table[1+nrow(qaic.table),] <- list(sensitivity, subSetVar, subSet,
                                           ERConstraint, LRConstraint, qaic.mod,
                                           NA, Sys.time())
     
     # 7A.e Remove any old AICs and then save
     # at the slice step you keep only the earliest AIC for each model-constraint combo
-    aic.table %>% 
+    qaic.table %>% 
       group_by(sensitivity, subSetVar, subSet,ERConstraint, LRConstraint) %>% 
       arrange(desc(run_date)) %>% 
       slice(0:1) %>% 
       filter(!is.na(sensitivity)) %>%
       write_csv(here::here(outPath, 'tables',
-                           'Model_AIC.csv'))
+                           'Model_QAIC.csv'))
   }
   
   ####****************************
@@ -422,7 +459,9 @@ analyzeTempDLNM <- function(sensitivity, subSetVar, subSet,
       bind_rows(as.data.frame(est.ref.per05$cumRRhigh) )
     colnames(uci.table) <- paste0('uci.rr.', colnames(uci.table))
     
-    # 7B.j Combine fit and se for individual lags #vdo comment: instead "individual lags", this should really be "cumulative lags" yes? We already saved ind lags on line388-390
+    # 7B.j Combine fit and se for cumulative lags 
+    #vdo comment: instead 'individual lags', this should really be 'cumulative lags' yes? We already saved ind lags on line388-390
+    # str: correct; changed.
     # note that all RR are relative to the exposure reference value we set above 
     est.table <- bind_cols(fit.table, lci.table, uci.table)
     

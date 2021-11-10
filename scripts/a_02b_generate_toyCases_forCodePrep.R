@@ -1,4 +1,4 @@
-# Generate Fake UTI Cases for Code Review
+# Generate Toy UTI Cases for Code Review
 # Data Preparation
 # Daily Temperature-UTI Project 
 # Joan Casey & Sebastian T. Rowland
@@ -10,15 +10,15 @@
 
 # N: Notes
 # 0: Preparation 
-# 1: Create Fake Cases
+# 1: Create Toy Cases
 
 ####**************
 #### N: Notes #### 
 ####**************
 
 # Na Description
-# The goal of this script is to create a fake dataset for reproducibility testing
-# this fake dataset should have a null association between temp and UTI
+# The goal of this script is to create a toy dataset for reproducibility testing
+# this toy dataset should have a slight positive association between temp and UTI
 
 ####********************
 #### 0: Preparation #### 
@@ -34,25 +34,27 @@ if (!exists('ran_0_01')){
 set.seed(1234)
 
 ####**************************
-#### 1: Create Fake Cases ####
+#### 1: Create Toy Cases ####
 ####**************************
 
-# 1a Set number of days of fake data 
+# 1a Set number of days of toy data 
 nDays <- 366 + 365
 
 # 1b Create a vector of fips Codes
 activeFIPs <- read_fst(here::here('data', 'intermediate',
-                                 'fake_weather.fst')) %>% 
+                                 'toy_weather.fst')) %>% 
   dplyr::select(fips) %>% 
   distinct() 
 
 # 1c Read weather data
 temper <- read_fst(here::here('data', 'intermediate',
-                    'fake_weather.fst')) 
+                    'toy_weather.fst')) 
 
 # 1d Begin dataset with Index variable
+# we start with -25 to account for the lagged exposures.
+# but we exclude any cases before 1999 in the analysis
 cases <- expand_grid(
-  day_index = c(1:nDays),
+  day_index = c(-25:nDays),
   fips = activeFIPs$fips) 
 
 # 1e Create Admit date variable 
@@ -67,23 +69,20 @@ cases <- cases %>%
   distinct()
 
 # 1f Add temperature values
-# here we assign some temperature values to create a fake effect
+# here we assign some temperature values to create a toy effect
 # we also put adate in the same format as in the real UTI data 
 cases <- cases %>% 
   inner_join(temper, by = c('fips', 'adate')) %>% 
   mutate(tmeanLag1 = lag(tmean, 1), 
          tmeanLag2 = lag(tmean, 2),
          tmeanLag3 = lag(tmean, 3),
-         tmeanLag4 = lag(tmean, 4),
-         tmeanLag4 = lag(tmean, 4),
-         tmeanLag4 = lag(tmean, 4),
-         tmeanLag4 = lag(tmean, 4),
          tmeanLag4 = lag(tmean, 4)) %>% 
   mutate(adate = paste0(str_pad(month(adate0),2, 'left', '0'), 
-                        str_pad(day(adate0),2, 'left', '0'), year(adate0))) 
+                        str_pad(day(adate0),2, 'left', '0'), year(adate0)))  %>% 
+  filter(year(adate0) != 1998)
   
 # 1g Create case counts variable
-# including a fake effect 
+# including a toy effect 
 set.seed(1234)
 cases$case_count <- floor(rnorm(nrow(cases), 20 + 0.015*cases$tmean + 
                                   0.005*cases$tmeanLag1+ 0.002*cases$tmeanLag2 + 
@@ -108,16 +107,18 @@ cases <- cases %>%
 # 1k Add counts of female UTI and other modifiers 
 cases <- cases %>% 
   mutate(case_count_sex_f = abs(case_count - 2), 
-         case_count_low_ice = abs(case_count_sex_f / 2), #vdo ts issue: change this to case_count_low_ice_f for a_03 script
-         case_count_medicaid = abs(case_count_sex_f / 2))
+         case_count_low_ice_f = floor(abs(case_count_sex_f / 2)), #vdo ts issue: change this to case_count_low_ice_f for a_03 script
+         case_count_medicaid = floor(abs(case_count_sex_f / 2)))
+# str: case_count_low_ice was renamed to case_count_low_ice_f for consistency
 
 # 1l Save data 
 cases %>% 
   dplyr::select(fips, adate, sutter_county, case_count, case_count_sex_f, 
-                case_count_low_ice, #vdo ts issue: change this to case_count_low_ice_f for a_03 script
+                case_count_low_ice_f, #vdo ts issue: change this to case_count_low_ice_f for a_03 script
+                # str: changed the column name
                 case_count_medicaid) %>%
   write_csv(here::here('data', 'intermediate', 
-                                  'combined_cases_fake.csv'))
+                                  'combined_cases_toy.csv'))
 
 # 1m Cleanup 
 rm(activeFIPs, nDays, cases)

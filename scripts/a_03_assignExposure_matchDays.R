@@ -20,11 +20,6 @@
 #### N: Notes #### 
 ####**************
 
-# Na Description
-# I am only including code for the parts of the data prep that I've done; 
-# other data preparation steps could be included in this script, or placed in 
-# their own script(s).
-
 ####********************
 #### 0: Preparation #### 
 ####********************
@@ -42,7 +37,7 @@ tic('Exposure assigned and days matched')
 #### 1: Wrangle Case Data ####
 ####**************************
 
-# 1a Bring in either the real UTI data or the fake data
+# 1a Bring in either the real UTI data or the toy data
 # the outPath parameter is set in subsection 0d of 
 # 0_01_setUp_for_Analysis.R
 cases <- read_csv(here::here('data', 'intermediate', 
@@ -54,13 +49,13 @@ cases <- read_csv(here::here('data', 'intermediate',
                     sutter_county = col_character(), 
                     case_count = col_double(), 
                     case_count_sex_f = col_double(), 
-                    # case_count_high_ice_f = col_double(), #vdo ts issue: the dta doesnt appear to have this var so I commented this out
-                    case_count_low_ice = col_double(), #vdo ts issue: the toy dta has case_count_low_ice instead of case_count_low_ice_f so I changed the var
+                    case_count_low_ice_f = col_double(), #vdo ts issue: the dta doesnt appear to have this var so I commented this out
                     case_count_medicaid = col_double())
                   ) %>% 
   mutate(ZeroUTI = 'NonZero UTI') %>% 
-  rename(catchmentArea = sutter_county,
-         case_count_low_ice_f = case_count_low_ice) #vdo ts issue: added this line; added comments to a_02b
+  rename(catchmentArea = sutter_county) #vdo ts issue: added this line; added comments to a_02b
+
+# str: the low_ice_f column should be properly named now so all the issues around it should be resolved
 
 # 1b Add high_ICE variable 
 cases <- cases %>% 
@@ -75,7 +70,7 @@ if (outcomeName == 'UTI') {
   # 1c.i Clean up KP's date variable
   cases <- cases %>% 
     mutate(adate = parse_date_time(adate, 'ymd)'))
-} else if (outcomeName == 'fake') {
+} else if (outcomeName == 'toy') {
   cases <- cases %>% 
     mutate(adate = parse_date_time(adate, 'mdy)'))
 }
@@ -103,7 +98,9 @@ cases <- allCombos %>%
 # 1d.v For any combination without a UTI count, we say we have 0 UTI
 cases <- cases %>% 
   mutate(case_count = if_else(!is.na(ZeroUTI), as.numeric(case_count), 0),
-         case_count_sex_f = if_else(!is.na(ZeroUTI), as.numeric(case_count_sex_f), 0), 
+         case_count_sex_f = if_else(!is.na(ZeroUTI), as.numeric(case_count_sex_f), 0),
+         case_count_ice_iceQ1 = if_else(!is.na(ZeroUTI), as.numeric(case_count_ice_iceQ1), 0),
+         case_count_ice_iceQ234 = if_else(!is.na(ZeroUTI), as.numeric(case_count_ice_iceQ234), 0),
          case_count_medicaid_medicaid = if_else(!is.na(ZeroUTI), as.numeric(case_count_medicaid_medicaid), 0)) %>% 
   dplyr::select(-ZeroUTI)
 # 1d.vi Confirm that they got a zero. 
@@ -145,8 +142,8 @@ rm(allCombos, uniqueDates, uniqueFIPS, sutter_list)
 if(outcomeName == 'UTI'){
   temper <- read_fst(here::here('data', 'intermediate', 'daily_weather.fst')) 
 }
-if(outcomeName == 'fake'){
-  temper <- read_fst(here::here('data', 'intermediate', 'fake_weather.fst')) 
+if(outcomeName == 'toy'){
+  temper <- read_fst(here::here('data', 'intermediate', 'toy_weather.fst')) 
 }
 
 # 2b Process exposure data variables 
@@ -170,10 +167,14 @@ for(l in 0:(maxLag)){
 dta_6041 <- dtaAssignedTemp %>% dplyr::filter(fips==6041)
 head(dta_6041)
 
-# NOTE: we should change the averaging period for RH if we use more lags
-# 2f Create 7-day average rh
+# 2f Create 14-day average rh
+# str: modified to be 14 days average
 dtaAssignedTemp <- dtaAssignedTemp %>% 
-  mutate(meanRH = (1/7) * (rLag00+rLag01+rLag02+rLag03+rLag04+rLag05+rLag06))
+  mutate(meanRH = (1/14) * (rLag00+rLag01+rLag02+rLag03+rLag04+rLag05+rLag06+
+                              rLag07+rLag08+rLag09+rLag10+rLag11+rLag12+rLag13), 
+         meanRH21 = (1/21) * (rLag00+rLag01+rLag02+rLag03+rLag04+rLag05+rLag06+
+                              rLag07+rLag08+rLag09+rLag10+rLag11+rLag12+rLag13+
+                                rLag14+rLag15+rLag16+rLag17+rLag18+rLag19+rLag20))
 
 # 2g Clean up 
 rm(cases, dta_6041)
@@ -217,6 +218,8 @@ dtaAssignedTemp <- dtaAssignedTemp %>%
 ####******************
 
 #vdo comment: friendly reminder to remove jan 2015 comment?
+# str: Yes- we will remove this once we get the 2014 data and can properly 
+# incorporate the Jan 2015 cases
 #### TEMPORARY STEP: REMOVE JAN 2015 ### 
 # this step should be remove in the final version of the code, but first we 
 # need updated temperature dataset
@@ -231,7 +234,7 @@ dtaAssignedTemp <- dtaAssignedTemp %>%
 # I use the fst format because it saves memory and it faster to read/write
 dtaAssignedTemp %>% 
   dplyr::select(adate, fips, matchID, contains('case_count'),
-                contains('tLag'), contains("rLag"), meanRH, catchmentArea) %>%
+                contains('tLag'), contains("rLag"), meanRH, meanRH21, catchmentArea) %>%
   write_fst(here::here('data', 'prepared', 
                        paste0('cases_assignedTemp_', outcomeName, '.fst')))
 

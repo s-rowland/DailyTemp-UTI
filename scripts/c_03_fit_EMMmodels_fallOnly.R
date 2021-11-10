@@ -19,13 +19,6 @@
 #### N: Notes ####
 ####**************
 
-# Na Description
-# I am only including code for the parts of the data prep that I've done;
-# other data preparation steps could be included in this script, or placed in
-# their own script(s).
-# I made assumptions about what the other data preparation sctions would be,
-# just so that I could have some placeholder section names
-
 ####********************
 #### 0: Preparation ####
 ####********************

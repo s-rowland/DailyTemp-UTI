@@ -40,8 +40,8 @@ ran_0_01 <- "ran_0_01"
 # 0c Set user - this only controls the outputs path
 # the user should be 'Analyst' unless you are the code reviewer who
 # is running the code to test for reproducibility
-# user <- "Analyst"
- user <- 'Reviewer'
+ user <- "Analyst"
+# user <- 'Reviewer'
 
 # 0d Set outcomeName
 # this also controls the outputs path
@@ -49,8 +49,8 @@ ran_0_01 <- "ran_0_01"
 # reproducibility.
 # Ideally both the analyst and the reviewer run the code with the fake data
 # and compare results to confirm reproducibility
-# outcomeName <- 'UTI'
- outcomeName <- "fake"
+ outcomeName <- 'UTI'
+# outcomeName <- "toy"
 
 ####**********************
 #### 1: Load Packages ####
@@ -138,26 +138,24 @@ rm(a, myFunctions, sourceMyFunctions)
 #### 4: Create Tables for Grid Search ####
 ####**************************************
 
-# Creating these tables is important because it allows us to record the AIC
+# Creating these tables is important because it allows us to record the QAIC
 # so we can report them in the manuscript
 # Note that if we use a quasi-poisson distribution, then we actually
 # calculate the QAIC (since quasi-poisson is not a proper distribution)
-# In this case, AIC is a bit of a misnomer, and we can change this to
-# 'QAIC tables'
 
-# 4a Create table for model's AIC
-if (!file.exists(here::here(outPath, "tables", "model_AIC.csv"))) {
+# 4a Create table for model's QAIC
+if (!file.exists(here::here(outPath, "tables", "model_QAIC.csv"))) {
   data.frame(
     sensitivity = NA,
     subSetVar = NA,
     subSet = NA,
     ERConstraint = NA,
     LRConstraint = NA,
-    AIC = NA,
+    QAIC = NA,
     AkaikeWeight = NA,
     run_date = NA
   ) %>%
-    write_csv(here::here(outPath, "tables", "model_AIC.csv"))
+    write_csv(here::here(outPath, "tables", "model_QAIC.csv"))
 }
 
 # 4b Create table of the final selected models

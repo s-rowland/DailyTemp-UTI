@@ -41,7 +41,10 @@ identifySelectedConstraintsFitModel <- function(sensitivity, subSetVar, subSet){
              subSetVar == !!subSetVar & subSet == !!subSet)
   
   # 1c Fit and store selected model
-  analyzeTempDLNM(sensitivity, subSetVar, subSet,
-                selectedConstraints$ERConstraint[1], selectedConstraints$LRConstraint[1], 
-                'saveModel')
+  analyzeTempDLNM(sensitivity = sensitivity, 
+                  subSetVar = subSetVar, 
+                  subSet = subSet, 
+                  ERConstraint = candidateConstraintsGrid$ERConstraint[1], 
+                  LRConstraint = candidateConstraintsGrid$LRConstraint[1], 
+                  saveModel = 'saveModel')
 }
