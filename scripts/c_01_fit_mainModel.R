@@ -68,7 +68,7 @@ tempObs <- dta %>%
 # you don't need to consider alternative constraints for that dimension
 
 candidateConstraintsGrid <- expand_grid(
-  ERConstraint = c("3dfEvenKnots", "4dfEvenKnots", "5dfEvenKnots"),
+  ERConstraint = c("3dfEvenKnots", "4dfEvenKnots", "5dfEvenKnots"), #vdo comment: could we specify ER/LR (ie - is it even __ and log __)?
   LRConstraint = c("3dfLogKnots", "4dfLogKnots")
 )
 
@@ -77,7 +77,9 @@ candidateConstraintsGrid <- expand_grid(
 # note: when using the synthetic data, you will get a warning that the 'chat'
 # is < 1; you can ignore this warning because our goal with the synthetic data
 # is to just replicate results
-performGridSearch(candidateConstraintsGrid, "main", "fullSet", "fullSet")
+#vdo comment: what other parameters can there be? I'm a bit confused by how I was supposed to know main/fullSet/fullSet were appropriate 
+#vdo comment: got it - I see references in c_00a_analyzeTempDLNM (53-67); maybe include those descriptives here for easier understanding or a reference to that particular script
+performGridSearch(candidateConstraintsGrid, "main", "fullSet", "fullSet") 
 
 # 2c Get estimates from model with selected constraints
 identifySelectedConstraintsFitModel("main", "fullSet", "fullSet")

@@ -125,7 +125,7 @@ analyzeTempDLNM <- function(sensitivity, subSetVar, subSet,
     countVar = paste0('case_count_', subSetVar, '_', subSet)
     dta$outcome_count <- dta[, countVar]
   }
-  # specical female-only sensitivity analyses so that we can examine the effect 
+  # special female-only sensitivity analyses so that we can examine the effect #vdo comment: is this description accurate? We are looking at female & male here; also wasn't the study pop limited to female only?
   # of restricting to females when doing effect modification
   if(sensitivity == 'FandM'){
     dta <- dta %>% 
@@ -235,7 +235,7 @@ analyzeTempDLNM <- function(sensitivity, subSetVar, subSet,
  
   
   # 6b Fit alternative models
-  # this is just an example to show what it would look like. 
+  # this is just an example to show what it would look like. #vdo comment: even though it's an example, you do end up using it in as a sensitivity analyses no? The comment is a bit misleading and implies the below is unimportant
   if(sensitivity == 'noRH'){
     mod <- gnm(outcome_count ~ cb.temp, 
                family = quasipoisson(link= 'log'), 
@@ -272,7 +272,7 @@ analyzeTempDLNM <- function(sensitivity, subSetVar, subSet,
     
     # 7A.c Calculate QAIC
     # 7A.c.i Make a version of the quasipoisson distribution that includes the AIC 
-    # that you would get if the distribution were poission
+    # that you would get if the distribution were poission #vdo comment: what you're doing here is clear, but could you clarify the why? ie - why can't we directly calculate the qaic right off the bat? This comes from my personal lack of understanding/remembering AIC for poisson and QAIC for quasipoisson
     x.quasipoisson <- function(...) {
       res <- quasipoisson(...)
       # This line is telling R to compute AIC for quasipoission
@@ -422,7 +422,7 @@ analyzeTempDLNM <- function(sensitivity, subSetVar, subSet,
       bind_rows(as.data.frame(est.ref.per05$cumRRhigh) )
     colnames(uci.table) <- paste0('uci.rr.', colnames(uci.table))
     
-    # 7B.j Combine fit and se for individual lags 
+    # 7B.j Combine fit and se for individual lags #vdo comment: instead "individual lags", this should really be "cumulative lags" yes? We already saved ind lags on line388-390
     # note that all RR are relative to the exposure reference value we set above 
     est.table <- bind_cols(fit.table, lci.table, uci.table)
     

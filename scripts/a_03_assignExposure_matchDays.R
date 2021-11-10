@@ -54,12 +54,13 @@ cases <- read_csv(here::here('data', 'intermediate',
                     sutter_county = col_character(), 
                     case_count = col_double(), 
                     case_count_sex_f = col_double(), 
-                    case_count_high_ice_f = col_double(),
-                    case_count_low_ice_f = col_double(),
+                    # case_count_high_ice_f = col_double(), #vdo ts issue: the dta doesnt appear to have this var so I commented this out
+                    case_count_low_ice = col_double(), #vdo ts issue: the toy dta has case_count_low_ice instead of case_count_low_ice_f so I changed the var
                     case_count_medicaid = col_double())
                   ) %>% 
   mutate(ZeroUTI = 'NonZero UTI') %>% 
-  rename(catchmentArea = sutter_county)
+  rename(catchmentArea = sutter_county,
+         case_count_low_ice_f = case_count_low_ice) #vdo ts issue: added this line; added comments to a_02b
 
 # 1b Add high_ICE variable 
 cases <- cases %>% 
@@ -215,6 +216,7 @@ dtaAssignedTemp <- dtaAssignedTemp %>%
 #### 5: Save Data ####
 ####******************
 
+#vdo comment: friendly reminder to remove jan 2015 comment?
 #### TEMPORARY STEP: REMOVE JAN 2015 ### 
 # this step should be remove in the final version of the code, but first we 
 # need updated temperature dataset

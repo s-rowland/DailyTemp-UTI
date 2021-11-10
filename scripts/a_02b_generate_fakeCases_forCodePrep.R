@@ -87,7 +87,7 @@ cases <- cases %>%
 set.seed(1234)
 cases$case_count <- floor(rnorm(nrow(cases), 20 + 0.015*cases$tmean + 
                                   0.005*cases$tmeanLag1+ 0.002*cases$tmeanLag2 + 
-                                  0.001*cases$tmeanLag3+ 0.0005*cases$tmeanLag4, 2))  
+                                  0.001*cases$tmeanLag3+ 0.0005*cases$tmeanLag4, 2)) #vdo ts issue: because there are missing data in the lagged vars, this code doesn't run  
 cases <- cases %>%  
   mutate(case_count = if_else(case_count < 0, 20, case_count)) %>%
   dplyr::select(-tmean, -avgrelhum) %>% 
@@ -108,13 +108,13 @@ cases <- cases %>%
 # 1k Add counts of female UTI and other modifiers 
 cases <- cases %>% 
   mutate(case_count_sex_f = abs(case_count - 2), 
-         case_count_low_ice = abs(case_count_sex_f / 2), 
+         case_count_low_ice = abs(case_count_sex_f / 2), #vdo ts issue: change this to case_count_low_ice_f for a_03 script
          case_count_medicaid = abs(case_count_sex_f / 2))
 
 # 1l Save data 
 cases %>% 
   dplyr::select(fips, adate, sutter_county, case_count, case_count_sex_f, 
-                case_count_low_ice,
+                case_count_low_ice, #vdo ts issue: change this to case_count_low_ice_f for a_03 script
                 case_count_medicaid) %>%
   write_csv(here::here('data', 'intermediate', 
                                   'combined_cases_fake.csv'))
