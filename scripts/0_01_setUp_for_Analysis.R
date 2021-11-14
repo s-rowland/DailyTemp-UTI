@@ -40,8 +40,8 @@ ran_0_01 <- "ran_0_01"
 # 0c Set user - this only controls the outputs path
 # the user should be 'Analyst' unless you are the code reviewer who
 # is running the code to test for reproducibility
- user <- "Analyst"
-# user <- 'Reviewer'
+ # user <- "Analyst"
+user <- 'Reviewer'
 
 # 0d Set outcomeName
 # this also controls the outputs path
@@ -49,8 +49,8 @@ ran_0_01 <- "ran_0_01"
 # reproducibility.
 # Ideally both the analyst and the reviewer run the code with the fake data
 # and compare results to confirm reproducibility
- outcomeName <- 'UTI'
-# outcomeName <- "toy"
+ # outcomeName <- 'UTI'
+outcomeName <- "toy"
 
 ####**********************
 #### 1: Load Packages ####

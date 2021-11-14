@@ -49,10 +49,10 @@ if (outcomeName == "UTI") {
 }
 if (outcomeName == "toy") {
   source(here::here("scripts", "a_01b_generate_toyTemp_forCodePrep.R"))
-  source(here::here("scripts", "a_02b_generate_toyCases_forCodePrep.R")) #vdo ts issue 11/9: trouble still remains here with rnorm creation
+  source(here::here("scripts", "a_02b_generate_toyCases_forCodePrep.R"))
 }
 # we assign exposure the same way regardless of real or fake data
-source(here::here("scripts", "a_03_assignExposure_matchDays.R")) #vdo ts issue 11/9: renaming ICE variables brought up issues that didn't come up in past (x Column `case_count_low_ice_f` doesn't exist.)
+source(here::here("scripts", "a_03_assignExposure_matchDays.R")) 
 
 ####*********************
 #### 2: Run Analysis ####
