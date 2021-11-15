@@ -23,7 +23,8 @@ scripts/z
 # Results from simulation studies (not shared)
 outputs_exploreLinear
 outputsFake*
-
+outputs_toy_Analyst/estimates
+outputs_toy_Analyst/models
 # Results for manuscript (not shared)
 outputs/*
 
