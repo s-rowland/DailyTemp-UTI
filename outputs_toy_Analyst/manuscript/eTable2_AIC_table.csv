@@ -1,0 +1,7 @@
+ERConstraint,LRConstraint,AIC,AkaikeWeight
+3dfEvenKnots,3dfLogKnots,147824.1200417152,1.7
+3dfEvenKnots,4dfLogKnots,147932.88209911893,0
+4dfEvenKnots,3dfLogKnots,147816.05327190258,97.5
+4dfEvenKnots,4dfLogKnots,147945.43889550312,0
+5dfEvenKnots,3dfLogKnots,147825.70383753392,0.8
+5dfEvenKnots,4dfLogKnots,147948.71864500345,0

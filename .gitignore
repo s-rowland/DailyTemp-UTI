@@ -25,7 +25,7 @@ outputs_exploreLinear
 outputsFake*
 
 # Results for manuscript (not shared)
-outputs*
+outputs/*
 
 # writing material and communication for manuscript 
 manuscript_writing
