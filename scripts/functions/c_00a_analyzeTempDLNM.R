@@ -86,6 +86,7 @@ analyzeTempDLNM <- function(sensitivity, subSetVar, subSet,
   
   # set this instead to test subSetting by a time-varying characteristic
   # subSetVar <- 'season'; subSet <- 'sum';  saveModel <- 'saveQAIC'
+ 
   
   # 1b Create modelName 
   modelName <- paste(sensitivity, subSetVar, subSet, 
@@ -304,12 +305,13 @@ analyzeTempDLNM <- function(sensitivity, subSetVar, subSet,
                                       'Model_QAIC.csv'), col_types = 'cccccdcT')
     
     # 7A.c Calculate QAIC
-    # 7A.c.i Make a version of the quasipoisson distribution that includes the AIC 
-    # the gnm() function will not directly compute QAIC, so we compute QAIC 
-    # following the procedure recommended by the MuMIn package documentation
-    # that you would get if the distribution were poission 
-    #vdo comment: what you're doing here is clear, but could you clarify the why? ie - why can't we directly calculate the qaic right off the bat? This comes from my personal lack of understanding/remembering AIC for poisson and QAIC for quasipoisson
-    # str: added explanatory comment
+    # the gnm() function will not directly compute QAIC
+    # We instead compute QAIC following the procedure recommended by the MuMIn
+    # package documentation, where you calculate the AIC you would get if the 
+    # distribution were Poisson, and then account for the overdispersion.
+ 
+    # 7A.c.i Make a version of the quasipoisson distribution that includes 
+    # calculating the AIC from a poisson distribution
     x.quasipoisson <- function(...) {
       res <- quasipoisson(...)
       # This line is telling R to compute AIC for quasipoission
@@ -319,18 +321,18 @@ analyzeTempDLNM <- function(sensitivity, subSetVar, subSet,
     }
     # 7A.c.ii Update the model with the new distribution
     mod1 <- update(mod,family = 'x.quasipoisson')
-    # 7A.c.iii Extract the overdispersion factor
+    # 7A.c.iii Compute the QAIS using the overdispersion factor from this model
     qaic.mod <- QAIC(mod1, chat = summary(mod1)$dispersion)
     # reminder: equation for dispersion factor
     #with(object,sum((weights * residuals^2)[weights > 0])/df.residual)
     
-    # 7A.d Add this aic to the set of AIC's
+    # 7A.d Add this QIAC to the set of QAIC's
     qaic.table[1+nrow(qaic.table),] <- list(sensitivity, subSetVar, subSet,
                                           ERConstraint, LRConstraint, qaic.mod,
                                           NA, Sys.time())
     
-    # 7A.e Remove any old AICs and then save
-    # at the slice step you keep only the earliest AIC for each model-constraint combo
+    # 7A.e Remove any old QAICs and then save
+    # at the slice step you keep only the earliest QAIC for each model-constraint combo
     qaic.table %>% 
       group_by(sensitivity, subSetVar, subSet,ERConstraint, LRConstraint) %>% 
       arrange(desc(run_date)) %>% 
@@ -460,9 +462,7 @@ analyzeTempDLNM <- function(sensitivity, subSetVar, subSet,
     colnames(uci.table) <- paste0('uci.rr.', colnames(uci.table))
     
     # 7B.j Combine fit and se for cumulative lags 
-    #vdo comment: instead 'individual lags', this should really be 'cumulative lags' yes? We already saved ind lags on line388-390
-    # str: correct; changed.
-    # note that all RR are relative to the exposure reference value we set above 
+    # note that all cumulative RR are relative to the exposure reference value we set above 
     est.table <- bind_cols(fit.table, lci.table, uci.table)
     
     # 7B.k Attach the labels of the exposure contrasts
