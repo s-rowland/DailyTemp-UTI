@@ -53,9 +53,7 @@ cases <- read_csv(here::here('data', 'intermediate',
                     case_count_medicaid = col_double())
                   ) %>% 
   mutate(ZeroUTI = 'NonZero UTI') %>% 
-  rename(catchmentArea = sutter_county) #vdo ts issue: added this line; added comments to a_02b
-
-# str: the low_ice_f column should be properly named now so all the issues around it should be resolved
+  rename(catchmentArea = sutter_county) 
 
 # 1b Add high_ICE variable 
 cases <- cases %>% 
@@ -216,19 +214,6 @@ dtaAssignedTemp <- dtaAssignedTemp %>%
 ####******************
 #### 5: Save Data ####
 ####******************
-
-#vdo comment: friendly reminder to remove jan 2015 comment?
-# str: Yes- we will remove this once we get the 2014 data and can properly 
-# incorporate the Jan 2015 cases
-#### TEMPORARY STEP: REMOVE JAN 2015 ### 
-# this step should be remove in the final version of the code, but first we 
-# need updated temperature dataset
-dtaAssignedTemp <- dtaAssignedTemp %>% 
-  mutate(YYYY = year(ADMDateTime), 
-         MM = month(ADMDateTime), 
-         DoW = lubridate::wday(ADMDateTime, label=TRUE, abbr = TRUE)) %>%
-  filter(!(YYYY == 2015 & MM == 1)) 
-#### END TEMPORARY STEP: REMOVE JAN 2015 ### 
 
 # 5a Save data 
 # I use the fst format because it saves memory and it faster to read/write

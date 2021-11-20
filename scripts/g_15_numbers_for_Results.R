@@ -117,12 +117,12 @@ est.table <- est.table %>%
 # 2i Get the values of interest
 # note that the column names will be different for the synthetic data because the 
 # fake temperature has a different distribution
-b.1.EEper05toMeanInd0 <- est.table[1, 2]
-b.2.EEmeanto95Ind0 <- est.table[1, 3]
-b.3.EEper05toMeanCumul14 <- est.table[14, 4]
-b.4.EEmeanto95Cumul14 <- est.table[14, 5]
-b.5.EEfig2caption1 <- est.table[2, 2]
-b.6.EEfig2caption2 <- est.table[2, 3]
+b.1.EEper05toMeanInd0 <- as.data.frame(est.table)[1, 2]
+b.2.EEmeanto95Ind0 <- as.data.frame(est.table)[1, 3]
+b.3.EEper05toMeanCumul14 <- as.data.frame(est.table)[14, 4]
+b.4.EEmeanto95Cumul14 <- as.data.frame(est.table)[14, 5]
+b.5.EEfig2caption1 <- as.data.frame(est.table)[2, 2]
+b.6.EEfig2caption2 <- as.data.frame(est.table)[2, 3]
 
 ####*******************************************************
 #### 3: Numeric Results for Effect Modification Models ####
@@ -189,10 +189,10 @@ est.table <- est.table %>%
 # 3h Extract values of interest
 est.table.cumul <- est.table %>% 
   dplyr::select(contains('estCumul'))
-c.1.EEper05toMeanInd14kpsc <- est.table.cumul[14, 3]
-c.2.EEper05toMeanInd14Sutter <- est.table.cumul[14, 4]
-c.3.EEper05toMeanInd14iceQ1 <- est.table.cumul[14, 1]
-c.4.EEper05toMeanInd14iceQ234 <- est.table.cumul[14, 2]
+c.1.EEper05toMeanInd14kpsc <- as.data.frame(est.table.cumul)[14, 3]
+c.2.EEper05toMeanInd14Sutter <- as.data.frame(est.table.cumul)[14, 4]
+c.3.EEper05toMeanInd14iceQ1 <- as.data.frame(est.table.cumul)[14, 1]
+c.4.EEper05toMeanInd14iceQ234 <- as.data.frame(est.table.cumul)[14, 2]
 
 # older version (perseved in case column names change with additional EMM analysis)
 #c.1.EEper05toMeanInd14kpsc <- est.table$estCumul_16.4_kpsc[14]
@@ -266,25 +266,25 @@ est.table <- est.table %>%
 eeFall <- est.table %>% 
   dplyr::select(contains('Ind')) %>% 
   dplyr::select(contains('fal'))
-d.a.eeFall <- eeFall[1,1] 
+d.a.eeFall <- as.data.frame(eeFall)[1,1] 
 eeSpring <- est.table %>% 
   dplyr::select(contains('Ind')) %>% 
   dplyr::select(contains('spr'))
-d.b.eeSpring <- eeSpring[1,1] 
+d.b.eeSpring <- as.data.frame(eeSpring)[1,1] 
 
 ####*************
 #### 5: Save ####
 ####*************
 
 # 5 Save numeric results 
-data.frame(quantity = c(
+a <- data.frame(quantity = c(
   'a.1.percentfemale', 'a.2.winningQAIC',
   'b.1.EEper05toMeanInd0', 'b.2.EEmeanto95Ind0', 'b.3.EEper05toMeanCumul14',
   'b.4.EEmeanto95Cumul14', 'b.5.EEfig2caption1', 'b.6.EEfig2caption2', 
   'c.1.EEper05toMeanInd14kpsc', 'c.2.EEper05toMeanInd14Sutter', 
   'c.3.EEper05toMeanInd14iceQ1', 'c.4.EEper05toMeanInd14iceQ234', 
   'd.a.eeFall', 'd.b.eeSpring'), 
-           value = c(
+           number = c(
              a.1.percentfemale, a.2.winningQAIC,
              b.1.EEper05toMeanInd0, b.2.EEmeanto95Ind0, b.3.EEper05toMeanCumul14, 
              b.4.EEmeanto95Cumul14, b.5.EEfig2caption1, b.6.EEfig2caption2, 

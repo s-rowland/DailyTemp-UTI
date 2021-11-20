@@ -61,11 +61,11 @@ tempObs %>%
     mean = round(mean(temp), 2),
     SD = round(sd(temp), 2),
     Min = round(min(temp), 2),
-    tenth = round(quantile(temp, 0.1), 2),
+    tenth = round(quantile(temp, 0.05), 2),
     Q1 = round(quantile(temp, 0.25), 2),
     Median = round(median(temp), 2),
     Q3 = round(quantile(temp, 0.75), 2),
-    ninetith = round(quantile(temp, 0.9), 2),
+    ninetith = round(quantile(temp, 0.95), 2),
     Max = round(max(temp), 2)
   ) %>%
   write_csv(here::here(outPath, "manuscript", "eTable1_temp_distribution.csv"))

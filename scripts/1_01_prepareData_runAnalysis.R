@@ -49,10 +49,10 @@ if (outcomeName == "UTI") {
 }
 if (outcomeName == "toy") {
   source(here::here("scripts", "a_01b_generate_toyTemp_forCodePrep.R"))
-  source(here::here("scripts", "a_02b_generate_toyCases_forCodePrep.R")) #vdo ts issue 11/9: trouble still remains here with rnorm creation
+  source(here::here("scripts", "a_02b_generate_toyCases_forCodePrep.R"))  
 }
 # we assign exposure the same way regardless of real or fake data
-source(here::here("scripts", "a_03_assignExposure_matchDays.R")) #vdo ts issue 11/9: renaming ICE variables brought up issues that didn't come up in past (x Column `case_count_low_ice_f` doesn't exist.)
+source(here::here("scripts", "a_03_assignExposure_matchDays.R")) 
 
 ####*********************
 #### 2: Run Analysis ####
@@ -81,16 +81,16 @@ source(here::here("scripts", "g_01_set_plottingObjectsManuscript.R"))
 source(here::here("scripts", "g_03_Fig1_expR_first4EvenLags.R"))
 source(here::here("scripts", "g_04_Fig2_LagR_Ind_Cumul.R"))
 source(here::here("scripts", "g_05_Fig3_seasonal_ER.R"))
-source(here::here("scripts", "g_06_Fig4and5_EMM.R")) #vdo comment: trouble here
+source(here::here("scripts", "g_06_Fig4and5_EMM.R")) 
 source(here::here("scripts", "g_07_eTable1_TempDistribution.R"))
-source(here::here("scripts", "g_08_eTable2_modelQAIC.R")) #vdo comment: trouble here
-source(here::here("scripts", "g_09_eTable3_mainEffectEstimates.R")) #vdo comment: trouble here
+source(here::here("scripts", "g_08_eTable2_modelQAIC.R")) 
+source(here::here("scripts", "g_09_eTable3_mainEffectEstimates.R"))
 source(here::here("scripts", "g_10_eFig2_UTI_timingDistribution.R"))
 source(here::here("scripts", "g_11_eFig3_sensitivity_forestPlot.R"))
 source(here::here("scripts", "g_12_eFig4and5_sensitivity_lagRwithGhost.R"))
 source(here::here("scripts", "g_13_eFig5_LagR_Ind_Cumul_fallOnly.R"))
 source(here::here("scripts", "g_14_eFig6and7_EMM_fallOnly.R"))
-source(here::here("scripts", "g_15_numbers_for_Results.R")) #vdo comment: trouble here
+source(here::here("scripts", "g_15_numbers_for_Results.R")) 
 
 # 3b Tell the analyst that the analysis is done
 toc()

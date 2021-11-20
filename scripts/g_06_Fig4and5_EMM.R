@@ -167,7 +167,7 @@ plot_ERCurve_perLag_2Mods <- function(sensitivityA, subSetVarA, subSetA, ERConst
   if (subSetVarA == "catchmentArea") {
     legendTitle <- "Catchment Area"
     est.table <- est.table %>%
-      mutate(mod_comp = if_else(mod_comp == "kpsc", "Kaiser Permanente", "Sutter Health"))
+      mutate(mod_comp = if_else(mod_comp == "kpsc", "KPSC", "Sutter Health"))
     textLabel <- "A"
   }
   if (subSetVarA == "ice") {
@@ -308,7 +308,7 @@ plot_LRCurve_perExposure_2Mods <- function(sensitivityA, subSetVarA, subSetA, ER
   if (subSetVarA == "catchmentArea") {
     legendTitle <- "Catchment Area"
     est.table <- est.table %>%
-      mutate(mod_comp = if_else(mod_comp == "kpsc", "Kaiser Permanente", "Sutter Health"))
+      mutate(mod_comp = if_else(mod_comp == "kpsc", "KPSC", "Sutter Health"))
   }
   if (subSetVarA == "ice") {
     legendTitle <- "Tract-Level\n Poverty"
