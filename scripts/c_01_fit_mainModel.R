@@ -58,9 +58,6 @@ tempObs <- dta %>%
 
 candidateConstraintsGrid <- expand_grid(
   ERConstraint = c("3dfEvenKnots", "4dfEvenKnots", "5dfEvenKnots"), 
-  #vdo comment: could we specify ER/LR (ie - is it even __ and log __)?
-  #str: sorry, I'm not sure what you mean. the columns are named ERConstraint and 
-  # LRConstraint to show what they contain. 
   LRConstraint = c("3dfLogKnots", "4dfLogKnots")
 )
 
@@ -69,9 +66,6 @@ candidateConstraintsGrid <- expand_grid(
 # note: when using the toy data, you will get a warning that the 'chat'
 # is < 1; you can ignore this warning because our goal with the synthetic data
 # is to just replicate results
-#vdo comment: what other parameters can there be? I'm a bit confused by how I was supposed to know main/fullSet/fullSet were appropriate 
-#vdo comment: got it - I see references in c_00a_analyzeTempDLNM (53-67); maybe include those descriptives here for easier understanding or a reference to that particular script
-# str: added explanation below 
 # 'main' sensitivity is for the main analysis 
 # 'fullSet' refers to all female UTI cases - our main case definition
 performGridSearch(

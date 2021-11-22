@@ -49,7 +49,7 @@ cases <- read_csv(here::here('data', 'intermediate',
                     sutter_county = col_character(), 
                     case_count = col_double(), 
                     case_count_sex_f = col_double(), 
-                    case_count_low_ice_f = col_double(), #vdo ts issue: the dta doesnt appear to have this var so I commented this out
+                    case_count_low_ice_f = col_double(), 
                     case_count_medicaid = col_double())
                   ) %>% 
   mutate(ZeroUTI = 'NonZero UTI') %>% 
