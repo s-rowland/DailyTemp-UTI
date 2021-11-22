@@ -95,8 +95,8 @@ est.table <- est.table %>%
   spread(EXPName, EE) %>%
   dplyr::select(lag_day, contains("Ind"), contains("Cumul")) %>%
   rename(
-    Lag = lag_day, "Lag-Specific Association" = estInd_16.4,
-    "Cumulative Association" = estCumul_16.4
+    Lag = lag_day, "Lag-Specific Association" = estInd_16.23,
+    "Cumulative Association" = estCumul_16.23
   )
 
 # 1j Save table

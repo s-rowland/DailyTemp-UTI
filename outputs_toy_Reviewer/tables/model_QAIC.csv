@@ -1,0 +1,13 @@
+sensitivity,subSetVar,subSet,ERConstraint,LRConstraint,QAIC,AkaikeWeight,run_date
+21DayLag,fullSet,fullSet,3dfEvenKnots,3dfLogKnots,19659.33137668808,89.9,2021-11-16T02:12:19Z
+21DayLag,fullSet,fullSet,3dfEvenKnots,4dfLogKnots,19665.114522060954,5,2021-11-16T02:12:19Z
+21DayLag,fullSet,fullSet,4dfEvenKnots,3dfLogKnots,19665.217556798532,4.7,2021-11-16T02:12:20Z
+21DayLag,fullSet,fullSet,4dfEvenKnots,4dfLogKnots,19672.751009357427,0.1,2021-11-16T02:12:20Z
+21DayLag,fullSet,fullSet,5dfEvenKnots,3dfLogKnots,19670.8195534016,0.3,2021-11-16T02:12:20Z
+21DayLag,fullSet,fullSet,5dfEvenKnots,4dfLogKnots,19679.76783859689,0,2021-11-16T02:12:21Z
+main,fullSet,fullSet,3dfEvenKnots,3dfLogKnots,19659.994033248404,83.7,2021-11-16T02:11:58Z
+main,fullSet,fullSet,3dfEvenKnots,4dfLogKnots,19664.60097001378,8.4,2021-11-16T02:12:05Z
+main,fullSet,fullSet,4dfEvenKnots,3dfLogKnots,19664.883335059247,7.3,2021-11-16T02:12:05Z
+main,fullSet,fullSet,4dfEvenKnots,4dfLogKnots,19671.455232962333,0.3,2021-11-16T02:12:06Z
+main,fullSet,fullSet,5dfEvenKnots,3dfLogKnots,19670.469073728582,0.4,2021-11-16T02:12:06Z
+main,fullSet,fullSet,5dfEvenKnots,4dfLogKnots,19678.74759486512,0,2021-11-16T02:12:07Z

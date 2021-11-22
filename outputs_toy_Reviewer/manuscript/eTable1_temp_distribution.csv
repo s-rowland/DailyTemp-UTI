@@ -1,0 +1,4 @@
+catchmentArea,mean,SD,Min,tenth,Q1,Median,Q3,ninetith,Max
+Kaiser Permanente,10.04,7.33,-5.56,0.47,3.36,9.9,16.72,19.81,24.64
+Sutter Health,9.92,7.43,-4.37,-0.02,3.19,9.81,16.91,19.59,24.43
+Total,10.02,7.34,-5.56,0.35,3.34,9.88,16.81,19.79,24.64
